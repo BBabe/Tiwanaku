@@ -1,0 +1,120 @@
+compter le nombre de jeux possibles
+façon de demander à l'ordi pour l'oracle ? oui, clairement !
+
+(compter les symétries, pour les parties qui sont les "mêmes"
+
+règles limites : positionner toutes les couleurs (ou pas !)
+possible de faire varier certains paramètres : taille plateau, nombre de jetons différents, taille max des zones
+
+- définir une forme valide
+	par énumération des formes (impossible en temps fini d'énumérer tous les plateaux imaginables)
+	par des règles
+--> les considérer comme des objets, ou plutôt avoir une vision de la plaque avec des chiffres dessus ?
+
+- règle simple qui résume tout : 2 mêmes terrains ne peuvent pas être en diagonale, SAUF s'ils sont liés par une 3e tuile
+
+- penser aux cultures : il faudrait donc pouvoir réfléchir en termes de formes
+--> une fois que j'ai des terrains valides, j'épuise toutes les possibilités (créées par la règle des cultures par ordre croissant par région), jusqu'à ce que chaque culture soit entourée de 8 cultures différentes
+- ces possibilité sont au nombre de (!Nc)^Nr
+
+- je pourrai afficher un graphe, comme pour cryptide
+
+- j'ai l'impression que la combinatoire est énorme : commencer par le petit plateau, 25 cases !!
+
+- définition récursive, avec des boucles : remplissage (des terrains) dans l'ordre de lecture
+--> pourquoi pas, avec règle simple + limite taille région (--> celle-ci est pas simple du coup, c'est le défaut de cette méthode)
+-> des fois la couleur peut être forcée dans une case
+-> compteur qui s'assure qu'il y a toutes les couleurs
+-> avoir un tableau par type de terrain, pour indiquer où c'est impossible, et où c'est obligatoire
+
+RÈGLES :
+impossible :
+
+
+obligatoire :
+- compléter pour pas que ce soit diagonal
+(- couleur manquante 
+
+- autre ordre de remplissage plus simple, par spirale tronquée par exemple ?
+
+- idée démineur ?
+
+- rmq : pas grave si je construis des combinaisons qui ne respectent pas toutes les règles, je les filtrerai, mais ce sera d'autant plus rapide qu'il n'y aura pas trop de ratés
+
+- fonction reconnaissance de régions jusqu'à maintenant (besoin de refaire tourner à chaque nouvelle case remplie, depuis le début ?)
+partir d'en haut à gauche, aller à droite tant que c'est la même couleur, puis descendre tant que c'est la même couleur
+comment être sûr que je les ferai toutes, les formes ?
+
+- rmq : par les formes, impossible que l'ordi trouve un tétris complet, si ? En énumérant
+--> nombre de formes : 1 -> 1, 2 -> 2, 3 -> 5, 4 -> , 5 -> 
+--> au moins, la grille se remplit vite...
+--> mettre couleurs après !
+(je pense que ça fait trop de possibilités, avec les formes à 1 case)
+
+- j'imagine que le but pour eux était d'en sélectionner des différents, mais comment...
+
+- faire un inventaire, pour chaque possible, du nombre de régions à 5, 4, ...
+--> pour chaque Nter_in_reg, boîte à moustache 
+
+- boucles imbriquées, c'est moche --> fonctions récursives, ou juste while parfois hein !
+
+- il va y avoir des milliers de possibilités avec pleins de cases à 1
+--> une note pourrait être le nombre de régions adossée à une partie : moins il y en a, mieux c'est
+
+- but : qu'il y est une solution unique pour les cultures ?
+
+- évaluer les 3 critères en même temps
+
+- faire cultures avant de déterminer couleurs, ça pourrait éliminer des possibilités en +	
+
+- POUR COULEURS, JUSTE DÉTERMINER LES ENSEMBLES DE RÉGIONS QUI ONT LA MÊME COULEUR, ÇA C'EST UNIQUE (ensuite, les couleurs peuvent se permuter)
+
+____________________________________________________________________________________
+ATTENTION : l'aléatoire ne permet pas de tout parcourir, faire des boucles à chaque fois !
+--> mais je peux faire random au début, pour pas attendre la fin des calculs et avoir des solutions différentes à chaque fois
+
+FORMES
+- new form : nb aléatoire de 1 à 5
+- faire tourner des boucles sur i et j avec un test pour savoir si elle est déjà remplie, pour savoir si je fais commencer la new fig ici
+- premier terrain de la région --> liste des possibilités pour les autres terrains de cette région (ne doit pas sortir ni ê déjà occupé --> pour cela, parcourir une liste des cases possibles), en choisir une au hasard
+	faire i+-1, j+-1
+	garder une liste des impossibles aussi ! (ou alors au lieu de 2 tableaux, 1 seul avec un booléen à 3 valeurs)
+	juste besoin de rajouter les 4 voisins de la nouvelle case posée, les anciennes possibilités restent d'actualité
+- recommencer jusqu'à atteindre la taille fixée auparavant (la liste des possibles se propage d'une itération à une autre, en enlevant les cases choisies)
+- stocker chaque forme dans une liste (de formes = listes de coord)
+- il peut arriver que la figure ne puisse aller jusqu'à sa taille fixée, dans ce cas s'arrêter là, ce n'est pas grave
+
+COULEURS
+- matrice de correspondance : ligne = colonne = formes, avec des 1 si elles sont voisines
+--> je pense que ça va vite être contraignant, et qu'il vaut mieux faire comme ça :
+- couleur aléatoire à la première, puis aléatoire dans les possibles pour la deuxième, et ainsi de suite. S'il reste autant de régions que de couleurs non utilisées, aléatoirement (plus de contrainte)
+- faire dans quel ordre des formes ? plutôt les grosses en premier, ça a l'air plus contraignant
+
+CULTURES
+- comme d'hab, au fur et à mesure, plutôt que de réduire a posteriori toutes les combinaisons possibles (car complexité trop grande)
+- à chaque culture ajoutée au fur et à mesure, maj son tableau correspondant avec des 0 autour
+- on procède région par région
+- comment énumérer les possibilités de placements pour une région, connaissant les tableaux ? juste faire avec des if !
+- par taille de région croissante, - de chance d'échecs
+____________________________________________________________________________________
+CULTURES !
+
+pourquoi impossibilities ne se remet pas à jour ?
+--> ne même pas les mettre en argument ?*
+
+j'ai l'impression que j'ai déjà eu ce problème
+
+plusieurs noms ? ça fait mal au crâne, et je vois pas pourquoi ça fait ça ici alors que c'est pas la première fois
+fait que ce soit liste de listes ? bah non...
+
+changer de impossibilities
+une liste de coords par culture (au nombre de 5) --> presque même problème, avec une dimension de moins
+ou faire avec un array
+
+
+quelle représentation ? à part dans un premier temps, avant de l'intégrer ?
+
+____________________________________________________________________________________
+(COULEURS
+(- pour chacune des 4 couleurs, on remplit une forme aléatoire (comme ça, toutes les couleurs seront remprésentées)
+(- On créé un array Nformes_restantes * 4 couleurs : on indique pour chaque forme les couleurs qui ne sont pas possibles :
