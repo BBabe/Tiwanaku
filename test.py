@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 from matplotlib.colors import ListedColormap
 import copy
-##
+## Parameters
 
 Ni = 5
 Nj = 5
@@ -22,13 +22,13 @@ jz = range(Nj)
 
 coords0 = [[i, j] for i in iz for j in jz]
 
-##
+## Functions
 
 def fun_neighbors(ter):
     i, j = ter
     return [[i, j-1], [i, j+1], [i-1, j], [i+1, j]]
 
-##
+## Create regions (only forms)
 
 remaining_coords = coords0.copy()
 list_regions = []
@@ -91,7 +91,7 @@ for ind_reg, region in enumerate(list_unsorted0):
 for i in range(Nreg):
     matrix_neighbors[i,i] = 0
 
-##
+## Add colors to regions
 
 colors = ['brown', 'yellow', 'green', 'blue']
 remaining_colors = colors.copy()
@@ -126,7 +126,7 @@ for ind, region in enumerate(list_unsorted0):
         col = list_cols[ind]
         board_cols[i,j] = colors.index(col)
 
-##
+## Find possible cultures (inner function)
 
 
 # list_region = []
@@ -161,7 +161,7 @@ def rec_mini(list_region0, culture, cul_remaining0, region, list_lists0, ind, im
 # list_lists = rec_mini(list_region, culture, cul_remaining, region, list_lists, ind, impossibilities)
 # print(list_lists)
 
-##
+## Find possible cultures (outer function)
 
 
 def rec_maxi(solution0, impossibilities0, list_solutions0, cult_region, list_regions, ind):
