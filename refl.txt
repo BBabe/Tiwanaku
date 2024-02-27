@@ -2,6 +2,11 @@ MIX RÉGIONS-CULTURES
 but = restreindre la création des régions par quelques principes de cultures, pour voir si mon code final marche sur un exemple (pour l'instant, peu de chance de trouver un exemple), + réduire la taille des listes de possibilités à l'avenir
 
 - comment tester une version simple ?
+
+- JUSTE FAIRE LA BOUCLE POUR L'INSTANT !
+
+- faire tourner mini-form pour chaque taille une fois pour toutes, après j'ai juste à faire un test si c'est dans les possibilités, plutôt que reparcourir à chaque fois !
+--> il va y avoir des répétitions dans la façon dont je le cherche, non ? peut-être, tant pis, c'est en one shot
 ____________________________________________________________________________________
 ____________________________________________________________________________________
 
