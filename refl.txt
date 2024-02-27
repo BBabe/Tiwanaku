@@ -1,3 +1,37 @@
+- réessayer en petites dim, pour regarder si le tableau de solutions préliminaires est juste, ainsi que toute la partie de la fin sur la détermination de toutes les possibilités pour les cultures
+- 
+
+est-ce que la résolution en loop est vraiment plus longue ?
+
+chaque forme * !size
+
+voir si impossibilité toutes les combinaisons des cultures dans cette forme (la forme est une liste de coordonnées --> faire selon l'indice du territoire dans la région)
+for order_cultures in combi_cultures:
+for cult in order_cultures
+if impos:
+dsf
+else:
+break
+MAJ impos ac les possibilités qu'il reste pour chaque culture (s'il en reste, sinon passer à autre chose !)
+
+while impos modifiée:
+boucle sur les régions:
+
+le but est qu'il n'y ait aucun déchet ?
+
+il faut qu'il y ait récursion sur les choix faits pour les cultures aussi ?
+--> pourquoi pas !
+
+SOLUTION :
+pour chaque forme choisie, on va choisir une combinaison de cultures parmis celles qui marchent (énième loop). Autrement dit, on ne choisit pas juste la taille et la forme de la région, mais aussi comment elle est remplie
+
+- -> voir si c'est beaucoup plus long (en petites dimensions)
+PRINT L'HEURE À DES POINTS STRATÉGIQUES
+
+les couleurs arriveront après : je recode vraiment le jeu sur playstore dans un premier temps
+================================================================================================
+
+
 MIX RÉGIONS-CULTURES
 but = restreindre la création des régions par quelques principes de cultures, pour voir si mon code final marche sur un exemple (pour l'instant, peu de chance de trouver un exemple), + réduire la taille des listes de possibilités à l'avenir
 
@@ -7,6 +41,8 @@ but = restreindre la création des régions par quelques principes de cultures, 
 
 - faire tourner mini-form pour chaque taille une fois pour toutes, après j'ai juste à faire un test si c'est dans les possibilités, plutôt que reparcourir à chaque fois !
 --> il va y avoir des répétitions dans la façon dont je le cherche, non ? peut-être, tant pis, c'est en one shot
+
+
 ____________________________________________________________________________________
 ____________________________________________________________________________________
 
