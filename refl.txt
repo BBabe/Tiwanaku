@@ -1,5 +1,6 @@
-- réessayer en petites dim, pour regarder si le tableau de solutions préliminaires est juste, ainsi que toute la partie de la fin sur la détermination de toutes les possibilités pour les cultures
-- 
+
+
+===================================================================================================
 
 est-ce que la résolution en loop est vraiment plus longue ?
 
