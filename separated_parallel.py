@@ -112,9 +112,14 @@ if __name__ == '__main__':
     list_forms0 = []
     list_boards0 = []
 
+##
+
     first_forms = []
     for size_reg in range(1,Ncul+1):
-        first_forms.extend(fun_forms_in_remaining(0,0, remaining_ters0, size_reg))
+        first_forms.append(fun_forms_in_remaining(0,0, remaining_ters0, size_reg))
+        for form in first_forms[-1]:
+            print(form)
+        print()
 
 ##
 
@@ -124,24 +129,24 @@ if __name__ == '__main__':
     #     lis.extend(rec_form(remaining_ters0, list_forms0, list_boards0, impossibilities0, cultures0, region))
 
 
-    p = Pool(12)
-    results = p.map(partial(rec_form, remaining_ters0, list_forms0, list_boards0, impossibilities0, cultures0), first_forms)
-    p.close()
-    p.join()
-    for res in results:
-        lis.extend(res)
+    # p = Pool(12)
+    # results = p.map(partial(rec_form, remaining_ters0, list_forms0, list_boards0, impossibilities0, cultures0), first_forms)
+    # p.close()
+    # p.join()
+    # for res in results:
+    #     lis.extend(res)
 
 
 ##
 
-    print(len(lis))
+    # print(len(lis))
     # for sol,_ in lis:
     #     print(sol)
 
     ##
 
-    with open('/home/chilly-ben/Documents/Créations/Code/tiwanaku/solution_forms.json', "w") as fp:
-        json.dump(lis, fp)
+    # with open('/home/chilly-ben/Documents/Créations/Code/tiwanaku/solution_forms.json', "w") as fp:
+    #     json.dump(lis, fp)
 
     ##
 

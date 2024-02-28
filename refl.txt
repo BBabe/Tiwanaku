@@ -1,7 +1,24 @@
+SOLUTION :
+pour chaque forme choisie, on va choisir une combinaison de cultures parmis celles qui marchent (énième loop). Autrement dit, on ne choisit pas juste la taille et la forme de la région, mais aussi comment elle est remplie
+
+--> voir si c'est beaucoup plus long (en petites dimensions)
+
+les couleurs arriveront après : je recode vraiment le jeu sur playstore dans un premier temps
+________________________
+
+- comment paralléliser ?
+regrouper une région avec ses cultures
+
+--> ça va faire une grande liste initiale
+
+- pour les grilles de formes avec plusieurs solutions pour les cultures, les garder, il faudrait juste renseigner des valeurs initiales différentes pour les distinguer
+--> à coder, d'ailleurs
 
 
 ===================================================================================================
+LOOP
 
+((
 est-ce que la résolution en loop est vraiment plus longue ?
 
 chaque forme * !size
@@ -17,19 +34,8 @@ MAJ impos ac les possibilités qu'il reste pour chaque culture (s'il en reste, s
 
 while impos modifiée:
 boucle sur les régions:
+)))
 
-le but est qu'il n'y ait aucun déchet ?
-
-il faut qu'il y ait récursion sur les choix faits pour les cultures aussi ?
---> pourquoi pas !
-
-SOLUTION :
-pour chaque forme choisie, on va choisir une combinaison de cultures parmis celles qui marchent (énième loop). Autrement dit, on ne choisit pas juste la taille et la forme de la région, mais aussi comment elle est remplie
-
-- -> voir si c'est beaucoup plus long (en petites dimensions)
-PRINT L'HEURE À DES POINTS STRATÉGIQUES
-
-les couleurs arriveront après : je recode vraiment le jeu sur playstore dans un premier temps
 ================================================================================================
 
 
