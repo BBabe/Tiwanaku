@@ -1,3 +1,12 @@
+ACCÉLÉRATION :
+- ne pas tester les 120 combinaisons de cultures, il y a moyen de faire mieux !
+
+[[[0, 0], [1, 0], [1, 1]], [[1, 0], [1, 1], [2, 0]], [[1, 0], [1, 1], [1, 2]], [[0, 1], [1, 0], [1, 1]], [[1, 0], [1, 1], [2, 1]], [[0, 0], [1, 0], [2, 0]], [[0, 0], [0, 1], [1, 0]], [[1, 0], [2, 0], [2, 1]]]
+
+[[[0, 0], [0, 1], [1, 0]], [[0, 0], [0, 1], [0, 2]], [[0, 0], [0, 1], [1, 1]], [[0, 0], [1, 0], [1, 1]], [[0, 0], [1, 0], [2, 0]]]
+
+
+===================================================================================================
 SOLUTION :
 pour chaque forme choisie, on va choisir une combinaison de cultures parmis celles qui marchent (énième loop). Autrement dit, on ne choisit pas juste la taille et la forme de la région, mais aussi comment elle est remplie
 
