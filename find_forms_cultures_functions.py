@@ -32,14 +32,14 @@ def fun_init(iz, jz, coords_all):
     return remaining_ters0, [list_regions0, list_boards0, impossibilities0, list_cultures0], [region, cults]
 
 
-def fun_first_couples(size_max_reg, coords_all, permuts):
+def fun_first_couples(size_max_reg, coords_all, permuts, tetris_forms):
     ''' For parallel computations, start with a list of all possible regions-cultures for terrain [0,0] '''
     i = j = 0
     first_couples = []
     # Loop on size of first region
     for size_reg in range(1,size_max_reg+1):
         # All possible forms of size_reg in the board from terrain [0,0]
-        forms_size = fun_forms_in_remaining(i,j, coords_all, size_reg)
+        forms_size = fun_forms_in_remaining(i,j, coords_all, size_reg, tetris_forms)
         # Combine each form with all possible cultures orders
         for region in forms_size:
             for cults in permuts[size_reg-1]:
@@ -95,14 +95,17 @@ def fun_recursion(remaining_ters, changing_lists, global_variables, region_cults
             # Loop on all forms of size_reg in remaining_ters
             possible_forms = fun_forms_in_remaining(i,j, remaining_ters, size_reg, tetris_forms)
             for region in possible_forms:
-                fun_print(bool_parallel, list_regions, region0, region, start)
+                # fun_print(bool_parallel, list_regions, region0, region, start)
+
+
 
                 # Slower alternative to find possible cultures combinations, instead of what follows
-
                 list_possibilities, current_cults, accepted_cults, cult, ind = fun_init_small(size_reg)
                 list_possibilities = fun_possibilities_recursif([list_possibilities, current_cults, accepted_cults], cult, ind, region, impossibilities)
                 for cults in list_possibilities:
                     list_boards = fun_recursion(remaining_ters, [list_regions, list_boards, impossibilities, list_cultures], global_variables, [region, cults])
+
+
 
 
                 # # Loop on all possible cultures order
@@ -116,6 +119,7 @@ def fun_recursion(remaining_ters, changing_lists, global_variables, region_cults
                 #
                 #     else: # if no break
                 #         list_boards = fun_recursion(remaining_ters, [list_regions, list_boards, impossibilities, list_cultures], global_variables, [region, cults])
+
 
     return list_boards
 

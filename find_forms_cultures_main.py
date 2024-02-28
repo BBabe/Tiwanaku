@@ -16,11 +16,14 @@ if __name__ == '__main__':
     ## Input parameters
 
     # Number of lines
-    Ni = 3
+    Ni = 4
     # Number of columns
-    Nj = 3
+    Nj = 5
     # Maximal region size
-    size_max_reg = 5
+    size_max_reg = 4
+
+    # Load already existing file
+    bool_load = 1
 
     # Parallel computations: 1=yes, 0=no
     bool_parallel = 0
@@ -52,35 +55,48 @@ if __name__ == '__main__':
 
     ## Initialize and run recursion
 
-    # Initialize lists for recursion
-    remaining_ters0, changing_lists, first_couples = fun_init(iz, jz, coords_all)
+    if not bool_load:
+        # Initialize lists for recursion
+        remaining_ters0, changing_lists, first_couples = fun_init(iz, jz, coords_all)
 
-    # Regular computations
-    if not bool_parallel:
-        list_results = fun_recursion(remaining_ters0, changing_lists, global_variables, first_couples)
-
-    # Parallel computations
-    else:
-        # Start with a list of all possible regions-cultures for terrain [0,0]
-        first_couples = fun_first_couples(size_max_reg, coords_all, permuts)
+        # Regular computations
+        if not bool_parallel:
+            list_results = fun_recursion(remaining_ters0, changing_lists, global_variables, first_couples)
 
         # Parallel computations
-        p = Pool(Ncpu)
-        results = p.map(partial(fun_recursion, changing_lists, global_variables), first_couples)
-        p.close()
-        p.join()
+        else:
+            # Start with a list of all possible regions-cultures for terrain [0,0]
+            first_couples = fun_first_couples(size_max_reg, coords_all, permuts, tetris_forms)
 
-        # Same format as non-parallel computations
-        list_results = []
-        for res in results:
-            list_results.extend(res) # extend instead of append rule in formation of results
+            # Parallel computations
+            p = Pool(Ncpu)
+            results = p.map(partial(fun_recursion, remaining_ters0, changing_lists, global_variables), first_couples)
+            p.close()
+            p.join()
 
-    ## Save result
+            # Same format as non-parallel computations
+            list_results = []
+            for res in results:
+                list_results.extend(res) # extend instead of append rule in formation of results
 
-    with open('{}/{}'.format(folder_out, file_out), "w") as fp:
-        json.dump(list_results, fp)
+        ## Save result
 
-    print(fun_time(start))
+        with open('{}/{}'.format(folder_out, file_out), "w") as fp:
+            json.dump(list_results, fp)
+
+        print(fun_time(start))
+
+    ## Load
+
+    else:
+        import glob as glob
+        import os
+
+        list_paths = glob.glob(os.path.join(folder_out, file_out[:5] + '*'))
+        if list_paths:
+            path = list_paths[0]
+            with open(path, "r") as fp:
+                list_results = json.load(fp)
 
     ## Prints of result
 
@@ -89,3 +105,45 @@ if __name__ == '__main__':
     #     print(ter)
     #     print(cult)
     #     print()
+
+    ## Plot
+
+    from random import randrange
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    ind = randrange(len(list_results))
+
+    list_regions, list_cultures = list_results[ind]
+
+    board = np.full((Ni, Nj), 0)
+    for ind, region in enumerate(list_regions):
+        for i,j in region:
+            board[i,j] = ind
+
+    plt.close('all')
+
+    minor_y = np.arange(0.5, Ni-1)
+    minor_x = np.arange(0.5, Nj-1)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+
+    # colors = ['brown', 'yellow', 'green', 'blue']
+    # cmap = ListedColormap(colors)
+    ax.imshow(board, cmap = 'tab20c')
+
+
+    # ax.set_yticks(jz, jz[::-1])
+    ax.set_xticks(minor_x, [])#, minor=True)
+    ax.set_yticks(minor_y, [])#, minor = True)
+    ax.grid(True)#, which='minor')#, color='k', alpha=0.2)
+    # ax.grid()
+
+    for i in iz:
+        for j in jz:
+            text = ax.text(j, i, list_cultures[i][j],ha="center", va="center", color="k", fontsize=40)
+
+
+    plt.show()
+
