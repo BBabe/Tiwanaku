@@ -3,7 +3,6 @@ For a given size of the board and a given maximum region size, compute all possi
 [list of regions, list of cultures], with the following rules:
 - The size of the regions can be anything between 1 and the maximum
 - 2 equal cultures cannot be next to another, even diagonally
-
 '''
 import json
 import time

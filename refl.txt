@@ -1,3 +1,8 @@
+RECUL :
+
+- à quoi bon tout ça ? j'ai même pas encore joué seul...
+--> c'est une activité plaisante en soi, pas forcément utile
+- les calculs pour trouver toutes les solutions ont l'air trop grands...
 
 ===================================================================================================
 POUR COULEURS, JUSTE DÉTERMINER LES ENSEMBLES DE RÉGIONS QUI ONT LA MÊME COULEUR, ÇA C'EST UNIQUE (ensuite, les couleurs peuvent se permuter)
@@ -8,7 +13,6 @@ listes des régions ac telle couleur
 listes des régions ne pouvant pas avoir telle couleur
 
 - qd plusieurs choix de régions, commencer par celles qui ont le plus de voisins
-- voisins --> cf matrix_neighbors ds old/test.py
 
 - 1st région une couleur --> mettre tous ses voisins dans la liste_imposs de régions correspondant aux impossibilités de cette couleur
 - déplacer l'un de ses voisins dans une autre liste_poss, refaire pareil que la première région
@@ -18,6 +22,9 @@ listes des régions ne pouvant pas avoir telle couleur
 
 - si à tout moment une région est dans 3 liste_imposs, il n'y a pas de doute sur sa liste_poss
 - être sûr d'avoir les 4 couleurs
+
+- il peut y avoir plusieurs solutions ! par ex pour une région un peu isolée, elle pourrait être de deux couleurs différentes, ça ne changerait rien aux autres
+
 ===================================================================================================
 PLOTS
 
