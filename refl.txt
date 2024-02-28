@@ -21,7 +21,6 @@ listes des régions ne pouvant pas avoir telle couleur
 ===================================================================================================
 PLOTS
 
-- afficher chiffres cultures en plus des régions
 - chiffres cultures plus ou moins gros avec des couleurs différentes ?
 
 ===================================================================================================
@@ -54,7 +53,8 @@ AUTRES
 	une grille est fixée. Pour chaque autre grille (par ordre croissant de différence), sélectionner une position (non déjà sélectionnée) où les cultures diffèrent
 - faire avec heuristique simple, en loop sur tous les territoires posés jusqu'à présent jusqu'à ce qu'il n'y ait plus de changement (et ce à chaque nouvelle itération)
 - compter le nombre de jeux possibles
-- trouver une façon de demander à l'ordi pour l'oracle ? oui, clairement !
+- remplacer oracle pachamana par ordi
+	scanner une roue représentant une partie pour pouvoir en imprimer d'autres ?
 - compter les symétries, pour les parties qui sont les "mêmes"
 - faire gros plateau 5x9
 - comment évaluer la difficulté / l'intérêt d'un scénario
