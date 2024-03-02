@@ -1,3 +1,22 @@
+github : https://github.com/dettweilerjs/dettweilerjs.github.io/blob/master/_posts/2022-04-10-tiwanaku-scenarios.md?plain=1
+simu : https://www.codedna.me/posts/tiwanaku-scenarios.html
+===================================================================================================
+
+- pour la complexité
+	trop de copy ?
+	list, meilleur outil ?
+	essayer de plus contraindre les choses en commençant par les remplissages simples de 1 etc ?
+	vérifier code, pour améliorer chaque partie de calcul !
+
+- pourquoi je veux forcément dénombrer ?
+	écrire le pendant "random" pour trouver une solution : c'est exactement la même chose que le site finalement, mais ai-je confiance ? Je veux aussi que ça marche sur portable sans internet ?
+	vérifier la qualtié du scénario ...? (nb de régions différentes, s'assurer qu'il y a des régions de toutes les tailles)
+	faire que l'ordi remplace la pachamama
+
+first_couples : 1, 4, 30, 312, 4440 (37 formes de taille 5)
+
+===================================================================================================
+
 RECUL :
 
 - à quoi bon tout ça ? j'ai même pas encore joué seul...

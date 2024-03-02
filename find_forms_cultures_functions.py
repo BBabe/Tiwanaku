@@ -95,7 +95,7 @@ def fun_recursion(remaining_ters, changing_lists, global_variables, region_cults
             # Loop on all forms of size_reg in remaining_ters
             possible_forms = fun_forms_in_remaining(i,j, remaining_ters, size_reg, tetris_forms)
             for region in possible_forms:
-                # fun_print(bool_parallel, list_regions, region0, region, start)
+                fun_print(bool_parallel, list_regions, region0, region, start)
 
 
 

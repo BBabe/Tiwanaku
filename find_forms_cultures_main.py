@@ -6,6 +6,7 @@ For a given size of the board and a given maximum region size, compute all possi
 '''
 import json
 import time
+import sys
 from functools import partial
 from multiprocess import Pool
 # local
@@ -15,17 +16,17 @@ if __name__ == '__main__':
     ## Input parameters
 
     # Number of lines
-    Ni = 4
+    Ni = 5
     # Number of columns
     Nj = 5
     # Maximal region size
-    size_max_reg = 4
+    size_max_reg = 5
 
     # Load already existing file
-    bool_load = 1
+    bool_load = 0
 
     # Parallel computations: 1=yes, 0=no
-    bool_parallel = 0
+    bool_parallel = 1
     # Number of parallel processes
     Ncpu = 11
 
@@ -66,6 +67,8 @@ if __name__ == '__main__':
         else:
             # Start with a list of all possible regions-cultures for terrain [0,0]
             first_couples = fun_first_couples(size_max_reg, coords_all, permuts, tetris_forms)
+
+            ##
 
             # Parallel computations
             p = Pool(Ncpu)
