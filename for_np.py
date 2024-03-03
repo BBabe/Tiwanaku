@@ -7,10 +7,33 @@ For a given size of the board and a given maximum region size, compute all possi
 import json
 import time
 import sys
+from random import randrange
+import numpy as np
+import matplotlib.pyplot as plt
 from functools import partial
 from multiprocess import Pool
 # local
-from find_forms_cultures_functions import fun_date, fun_permut, fun_init, fun_recursion, fun_first_couples,fun_time
+from find_forms_cultures_functions_np import fun_date, fun_permut, fun_init, fun_recursion, fun_first_couples, fun_time
+##
+
+# impossibilities0 = np.zeros((2,2))
+# ij = [-10,-10]
+# def recur(ind, ij, k, impossibilities0):
+#     impossibilities = 1*impossibilities0
+#     if ind >= 0:
+#         ij[ind] = k
+#     if sum(ij)>= 0:
+#         impossibilities[ij[0], ij[1]] = 1
+#         print(impossibilities)
+#         print()
+#     else:
+#         for k in [0,1]:
+#             recur(ind+1, ij, k, impossibilities)
+#
+#     # return impossibilities0
+# recur(-1, ij, 0, impossibilities0)
+
+##
 
 if __name__ == '__main__':
     ## Input parameters
@@ -20,10 +43,7 @@ if __name__ == '__main__':
     # Number of columns
     Nj = 3
     # Maximal region size
-    size_max_reg = 4
-
-    # Load already existing file
-    bool_load = 0
+    size_max_reg = 5
 
     # Parallel computations: 1=yes, 0=no
     bool_parallel = 1
@@ -55,13 +75,13 @@ if __name__ == '__main__':
 
     ## Initialize and run recursion
 
-    if not bool_load:
+    if 1:
         # Initialize lists for recursion
-        remaining_ters0, changing_lists, first_couples = fun_init(iz, jz, coords_all)
+        remaining_ters0, impossibilities0, changing_lists, first_couples = fun_init(iz, jz, coords_all, Ni, Nj, size_max_reg)
 
         # Regular computations
         if not bool_parallel:
-            list_results = fun_recursion(remaining_ters0, changing_lists, global_variables, first_couples)
+            list_results = fun_recursion(remaining_ters0, impossibilities0, changing_lists, global_variables, first_couples)
 
         # Parallel computations
         else:
@@ -72,7 +92,7 @@ if __name__ == '__main__':
 
             # Parallel computations
             p = Pool(Ncpu)
-            results = p.map(partial(fun_recursion, remaining_ters0, changing_lists, global_variables), first_couples)
+            results = p.map(partial(fun_recursion, remaining_ters0, impossibilities0, changing_lists, global_variables), first_couples)
             p.close()
             p.join()
 
@@ -88,18 +108,6 @@ if __name__ == '__main__':
 
         print(fun_time(start))
 
-    ## Load
-
-    else:
-        import glob as glob
-        import os
-
-        list_paths = glob.glob(os.path.join(folder_out, file_out[:5] + '*'))
-        if list_paths:
-            path = list_paths[0]
-            with open(path, "r") as fp:
-                list_results = json.load(fp)
-
     ## Prints of result
 
     print(len(list_results))
@@ -109,10 +117,6 @@ if __name__ == '__main__':
     #     print()
 
     ## Plot
-
-    from random import randrange
-    import numpy as np
-    import matplotlib.pyplot as plt
 
     ind = randrange(len(list_results))
 

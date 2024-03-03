@@ -2,7 +2,7 @@ import copy
 import time
 from itertools import permutations
 import datetime as dt
-
+import numpy as np
 ## Small functions
 
 
@@ -20,16 +20,16 @@ def fun_permut(size_max_reg):
     return permuts
 
 
-def fun_init(iz, jz, coords_all):
+def fun_init(iz, jz, coords_all, Ni, Nj, Ncrop):
     ''' Initialize lists for recursion '''
-    impossibilities0 = [[[] for j in jz] for i in iz] # careful on the order of i and j if different
+    impossibilities0 = np.zeros((Ni, Nj, Ncrop))
     list_cultures0 = [[0 for j in jz] for i in iz] # 0 instead of [] to prepare the integer type
     remaining_ters0 = coords_all.copy()
     list_regions0 = []
     list_boards0 = []
     region = []
     cults = []
-    return remaining_ters0, [list_regions0, list_boards0, impossibilities0, list_cultures0], [region, cults]
+    return remaining_ters0, impossibilities0, [list_regions0, list_boards0, list_cultures0], [region, cults]
 
 
 def fun_init_while(iz, jz, coords_all):
@@ -70,85 +70,10 @@ def fun_first_couples(size_max_reg, coords_all, permuts, tetris_forms):
     return first_couples
 
 
-## Recursion function
-
-
-def fun_recursion(remaining_ters, changing_lists, global_variables, region_cults):
-    '''
-    For a given size of the board and a given maximum region size, compute all possible
-    [list of regions, list of cultures].
-
-    Recursion functions work as follows:
-    - make a copy of lists to be updated
-    - update lists
-    - condition of end of recursion
-    - recursion: loops on diverging possibilities
-
-    This function calls itself whenever a new region is chosen. The loops are on:
-    - the possible sizes of the region
-    - the possible forms of a region this size
-    - the possible cultures combinations of such a form, considering the impossibilities
-
-    '''
-    size_max_reg, permuts, tetris_forms, coords_all, bool_parallel, start = global_variables
-    region0, cults = region_cults # Pair format to enable parallelisation
-
-    # Preserve to-be-modified lists for other recursions
-    list_regions, list_boards, impossibilities, list_cultures = fun_copy(changing_lists)
-
-    # Update lists with new region and cultures
-    list_regions, list_cultures, remaining_ters = fun_update(region0, cults, list_regions, list_cultures, remaining_ters)
-
-    # End of recursion
-    if not remaining_ters:
-        list_boards.append([list_regions, list_cultures])
-        # print(list_regions)
-        # for i in range(len(list_cultures)):
-        #     print(list_cultures[i])
-        # print()
-
-    # Recursion
-    else:
-        # Update list of impossible cultures on the board, following the neighborhood rule
-        impossibilities = fun_update_bis(region0, cults, impossibilities, coords_all)
-
-        # Always taking the first remaining terrain should allow to explore all possibilities
-        i,j = remaining_ters[0]
-
-        # Loop on the size of the new region (containing terrain [i,j]), limited by remaining size
-        size_max_tmp = min(len(remaining_ters), size_max_reg)
-        for size_reg in range(1,size_max_tmp+1):
-
-            # Loop on all forms of size_reg in remaining_ters
-            possible_forms = fun_forms_in_remaining(i,j, remaining_ters, size_reg, tetris_forms)
-            for region in possible_forms:
-                # fun_print(bool_parallel, list_regions, region0, region, start)
-
-                # # Slower alternative to find possible cultures combinations, instead of what follows
-                # list_possibilities, current_cults, accepted_cults, cult, ind = fun_init_small(size_reg)
-                # list_possibilities = fun_possibilities_recursif([list_possibilities, current_cults, accepted_cults], cult, ind, region, impossibilities)
-                # for cults in list_possibilities:
-                #     list_boards = fun_recursion(remaining_ters, [list_regions, list_boards, impossibilities, list_cultures], global_variables, [region, cults])
-
-                # Loop on all possible cultures order
-                for cults in permuts[size_reg-1]:
-
-                    # Check if current cultures order avoids impossibilities
-                    for ind_cult, cult in enumerate(cults):
-                        a,b = region[ind_cult]
-                        if cult in impossibilities[a][b]:
-                            break # terminate computations from the first impossibility
-
-                    else: # if no break
-                        list_boards = fun_recursion(remaining_ters, [list_regions, list_boards, impossibilities, list_cultures], global_variables, [region, cults])
-
-
-    return list_boards
-
 ##
 
 
-def fun_recursion_np(remaining_ters, impossibilities, changing_lists, global_variables, region_cults):
+def fun_recursion(remaining_ters, impossibilities0, changing_lists, global_variables, region_cults):
     '''
     For a given size of the board and a given maximum region size, compute all possible
     [list of regions, list of cultures].
@@ -185,6 +110,7 @@ def fun_recursion_np(remaining_ters, impossibilities, changing_lists, global_var
     # Recursion
     else:
         # Update list of impossible cultures on the board, following the neighborhood rule
+        impossibilities = 1*impossibilities0
         impossibilities = fun_update_bis(region0, cults, impossibilities, coords_all)
 
         # Always taking the first remaining terrain should allow to explore all possibilities
@@ -199,23 +125,23 @@ def fun_recursion_np(remaining_ters, impossibilities, changing_lists, global_var
             for region in possible_forms:
                 # fun_print(bool_parallel, list_regions, region0, region, start)
 
-                # # Slower alternative to find possible cultures combinations, instead of what follows
-                # list_possibilities, current_cults, accepted_cults, cult, ind = fun_init_small(size_reg)
-                # list_possibilities = fun_possibilities_recursif([list_possibilities, current_cults, accepted_cults], cult, ind, region, impossibilities)
-                # for cults in list_possibilities:
-                #     list_boards = fun_recursion(remaining_ters, [list_regions, list_boards, impossibilities, list_cultures], global_variables, [region, cults])
+                # Slower alternative to find possible cultures combinations, instead of what follows
+                list_possibilities, current_cults, accepted_cults, cult, ind = fun_init_small(size_reg)
+                list_possibilities = fun_possibilities_recursif([list_possibilities, current_cults, accepted_cults], cult, ind, region, impossibilities)
+                for cults in list_possibilities:
+                    list_boards = fun_recursion(remaining_ters, impossibilities, [list_regions, list_boards, list_cultures], global_variables, [region, cults])
 
-                # Loop on all possible cultures order
-                for cults in permuts[size_reg-1]:
-
-                    # Check if current cultures order avoids impossibilities
-                    for ind_cult, cult in enumerate(cults):
-                        a,b = region[ind_cult]
-                        if cult in impossibilities[a][b]:
-                            break # terminate computations from the first impossibility
-
-                    else: # if no break
-                        list_boards = fun_recursion(remaining_ters, impossibilities, [list_regions, list_boards, list_cultures], global_variables, [region, cults])
+                # # Loop on all possible cultures order
+                # for cults in permuts[size_reg-1]:
+                #
+                #     # Check if current cultures order avoids impossibilities
+                #     for ind_cult, cult in enumerate(cults):
+                #         a,b = region[ind_cult]
+                #         if impossibilities[a,b,cult-1]:
+                #             break # terminate computations from the first impossibility
+                #
+                #     else: # if no break
+                #         list_boards = fun_recursion(remaining_ters, impossibilities, [list_regions, list_boards, list_cultures], global_variables, [region, cults])
 
 
     return list_boards
@@ -260,8 +186,7 @@ def fun_update_bis(region, cults, impossibilities, coords_all):
             neighbors = fun_neighbors(i,j)
             impos_tmp = [ter for ter in neighbors if ter in coords_all] # neighbors which are on the board
             for a,b in impos_tmp: # i,j could be re-used
-                if cult not in impossibilities[a][b]: # avoid having same culture several times
-                    impossibilities[a][b].append(cult)
+                impossibilities[a,b, cult-1] = 1
     return impossibilities
 
 
@@ -332,7 +257,7 @@ def fun_possibilities_recursif(changing_lists, cult, ind, region, impossibilitie
     else:
         i,j = region[ind]
         # Loop on possible cultures
-        possible_cults = [cult for cult in current_cults if cult not in impossibilities[i][j]]
+        possible_cults = [cult for cult in current_cults if not impossibilities[i,j,cult-1]]
         for cult in possible_cults:
             list_possibilities = fun_possibilities_recursif([list_possibilities, current_cults, accepted_cults], cult, ind+1, region, impossibilities)
 

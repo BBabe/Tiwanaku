@@ -1,6 +1,79 @@
 github : https://github.com/dettweilerjs/dettweilerjs.github.io/blob/master/_posts/2022-04-10-tiwanaku-scenarios.md?plain=1
 simu : https://www.codedna.me/posts/tiwanaku-scenarios.html
 ===================================================================================================
+Remplissage à chaque étape ! pour éviter d'essayer trop de possibilités
+
+while ça bouge:
+	if len(5) exists: break
+	if len(4) exists: push value
+
+prendre la plus grosse crop ainsi remplie (si elle existe), chercher dans les formes avec au moins cette taille, et dans la forme choisie, il ne doit pas y avoir déjà deux fois le même chiffre, et faire la combinaison juste sur les chiffres qui manquent
+
+- si je pars avec une mauvaise première région, c'est foutu
+--> justement, ça va venir corriger !
+
+
+AUTRE DIFFICULTÉ : list of possible crops
+
+
+
+
+===================================================================================================
+
+- faire autrement que récursion, juste avec un while (pour le random)
+
+
+
+===================================================================================================
+ÉPURER CODE
+
+- tester np au lieu de listes
+
+
+===================================================================================================
+WHILE RANDOM
+
+- je peux soulager les copies !
+
+- random induissent un biais : chances équiprobables dans la fonction choice, mais est-ce que ça devrait être le cas ?
+
+- comment paralléliser ? on verra !
+
+- faire couleur + chiffres minimaux pour deviner l'unique
+	- faire avec un nombre de tuiles, qui est d'ailleurs limité !!! 15 (ou 17) (ça compte pour la grande grille)
+
+- faire une règle de temps ? ou de nombre de fois que j'appelle la fonction : quand ça veut pas, ça veut pas ?
+
+- est-ce que c'est bien de partir du plus contraint, ça ne va justement pas trouver de solution
+
+===================================================================================================
+App sur internet
+
+- bcp trop d'indices au début !
+- mais hyper rapide !!
+
+		plantGrid();
+		makeFarms();
+		colorFarms();
+		solveGrid();
+		stackTiles();
+
+- plantCell : whether crop possible en i,j (et on l'y met)
+
+- 1 fois sur 2 je plante une crop (s'il n'y en a pas déjà)
+--> est-ce qu'on va visiter toutes les possibilités ? je ne vois pas bcp d'aléatoire pour l'instant
+
+- intéressant : il remplit d'abord tous les 1, puis tous les 2 (il y en aura forcément moins que de 1 !), etc !
+- puis on crée une région pour chaque 5 (malynx)
+- on la complète dans un ordre aléatoire par ses voisins
+- façon de faire la couleur extrêmement simple : suppose que ça marche dans tous les cas tout de même !!
+
+- solve doit être pour savoir quelles tuiles laisser ? ça m'a pas l'air opti... mais vraiment pas ! Mais ouf la vitesse tout de même, je ne sais pas si c'est grâce au C ! Mais je pourrais presque coder en C ? Non, je veux utiliser sur smartphone
+
+tries ?
+
+
+===================================================================================================
 
 - pour la complexité
 	trop de copy ?
@@ -51,6 +124,7 @@ PLOTS
 
 ===================================================================================================
 - amélioration plus lente
+- remplacer listes par numpy détériore aussi...
 
 4_5_4
 00:06:46
@@ -63,12 +137,16 @@ PLOTS
 360
 00:00:15
 360
+	25
+	29
 
 3_3_5
 00:00:18
 2824
 00:00:19
 2824
+	42
+	29
 
 3_4_5
 

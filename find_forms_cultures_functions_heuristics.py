@@ -47,7 +47,7 @@ def fun_first_max(i,j, size_max_reg, coords_all, permuts, tetris_forms):
     ''' For parallel computations, start with a list of all possible regions-cultures for terrain [0,0] '''
     first_couples = []
     # All possible forms of size_reg in the board from terrain [0,0]
-    forms_size = fun_forms_in_remaining(i,j, coords_all, size_max_reg, tetris_forms)
+    forms_size = fun_forms_in_remaining(i,j, coords_all, size_max_reg, tetris_forms, [])
     # Combine each form with all possible cultures orders
     for region in forms_size:
         for cults in permuts[size_max_reg-1]:
@@ -62,7 +62,7 @@ def fun_first_couples(size_max_reg, coords_all, permuts, tetris_forms):
     # Loop on size of first region
     for size_reg in range(1,size_max_reg+1):
         # All possible forms of size_reg in the board from terrain [0,0]
-        forms_size = fun_forms_in_remaining(i,j, coords_all, size_reg, tetris_forms)
+        forms_size = fun_forms_in_remaining(i,j, coords_all, size_reg, tetris_forms, [])
         # Combine each form with all possible cultures orders
         for region in forms_size:
             for cults in permuts[size_reg-1]:
@@ -120,7 +120,7 @@ def fun_recursion(remaining_ters, changing_lists, global_variables, region_cults
         for size_reg in range(1,size_max_tmp+1):
 
             # Loop on all forms of size_reg in remaining_ters
-            possible_forms = fun_forms_in_remaining(i,j, remaining_ters, size_reg, tetris_forms)
+            possible_forms = fun_forms_in_remaining(i,j, remaining_ters, size_reg, tetris_forms, list_cultures)
             for region in possible_forms:
                 # fun_print(bool_parallel, list_regions, region0, region, start)
 
@@ -195,7 +195,7 @@ def fun_recursion_np(remaining_ters, impossibilities, changing_lists, global_var
         for size_reg in range(1,size_max_tmp+1):
 
             # Loop on all forms of size_reg in remaining_ters
-            possible_forms = fun_forms_in_remaining(i,j, remaining_ters, size_reg, tetris_forms)
+            possible_forms = fun_forms_in_remaining(i,j, remaining_ters, size_reg, tetris_forms, list_cultures)
             for region in possible_forms:
                 # fun_print(bool_parallel, list_regions, region0, region, start)
 
@@ -256,12 +256,21 @@ def fun_update_bis(region, cults, impossibilities, coords_all):
     '''
     if region: # valid for first recursion
         for ter, cult in zip(region, cults):
-            i,j = ter
-            neighbors = fun_neighbors(i,j)
-            impos_tmp = [ter for ter in neighbors if ter in coords_all] # neighbors which are on the board
-            for a,b in impos_tmp: # i,j could be re-used
-                if cult not in impossibilities[a][b]: # avoid having same culture several times
-                    impossibilities[a][b].append(cult)
+            impossibilities = fun_update_small(ter, cult, impossibilities, coords_all)
+    return impossibilities
+
+
+def fun_update_small(ter, cult, impossibilities, coords_all):
+    '''
+    Update list of impossible cultures on the board, following the neighborhood rule
+    This list is updated separately from the others to limit number of computations
+    '''
+    i,j = ter
+    neighbors = fun_neighbors(i,j)
+    impos_tmp = [ter for ter in neighbors if ter in coords_all] # neighbors which are on the board
+    for a,b in impos_tmp: # i,j could be re-used
+        if cult not in impossibilities[a][b]: # avoid having same culture several times
+            impossibilities[a][b].append(cult)
     return impossibilities
 
 
@@ -270,7 +279,7 @@ def fun_neighbors(i,j):
     return [[i+x, j+y] for x in [-1,0,1] for y in [-1,0,1]] # list also contains ter, which is not a problem
 
 
-def fun_forms_in_remaining(i,j, remaining_ters, size_reg, tetris_forms):
+def fun_forms_in_remaining(i,j, remaining_ters, size_reg, tetris_forms, list_cultures):
     ''' All forms of size_reg in remaining_ters (and containing terrain [i,j] '''
     # For each form of shape size_reg, terrain [i,j] could be anywhere
     all_forms = [[[a+i,b+j] for a,b in reg] for reg in tetris_forms[size_reg-1][:]]
@@ -283,7 +292,19 @@ def fun_forms_in_remaining(i,j, remaining_ters, size_reg, tetris_forms):
             # Different initial forms, if starting from a different terrain, can be the same
             reg.sort() # list order matters
             if reg not in possible_forms:
-                possible_forms.append(reg)
+                bool_pb = False
+                if list_cultures:
+                    cultures_already = [list_cultures[i][j] for i,j in reg]
+                    cultures_already = sorted(cultures_already, reverse=True)
+                    if cultures_already[0] > size_reg:
+                        bool_pb = True
+                    elif len(cultures_already) > 1:
+                        ind = 0
+                        while ind < cultures_already-1 and not bool_pb:
+                            bool_pb = (cultures_already[ind] == cultures_already[ind+1])
+                            ind += 1
+                if not bool_pb:
+                    possible_forms.append(reg)
     return possible_forms
 
 
