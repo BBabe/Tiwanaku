@@ -11,6 +11,7 @@ import sys
 from random import randrange, choice, shuffle
 import numpy as np
 import matplotlib.pyplot as plt
+from operator import itemgetter
 from functools import partial
 from multiprocess import Pool
 # local
@@ -88,17 +89,21 @@ if __name__ == '__main__':
                     # Update list of impossible cultures on the board, following the neighborhood rule
                     impossibilities = fun_update_bis(region0, cults, impossibilities, coords_all)
 
-
                     remaining_cults = copy.deepcopy(remaining_ters)
                     bool_max = True
                     while remaining_cults:
-                        social = [[i,j,len(impossibilities[i][j])] for i,j in remaining_cults]
-                        len_max = max(social[:][2])
+                        # social = [[i,j,len(impossibilities[i][j])] for i,j in remaining_cults]
+                        social = [len(impossibilities[i][j]) for i,j in remaining_cults]
+                        # print(social)
+                        ind_max, len_max = max(enumerate(social), key=itemgetter(1))
+                        i,j = remaining_cults[ind_max]
+                        # len_max = max(social[:][2])
+                        # print(len_max)
                         if len_max <= size_max_reg-2:
                             break
                         elif len_max == size_max_reg-1:
-                            ind_max = social.index(len_max)
-                            i,j = social[ind_max][:2]
+                            # ind_max = social.index(len_max)
+                            # i,j = social[ind_max][:2]
                             missing_crop = 15-sum(impossibilities[i][j])
                             list_cultures[i][j] = missing_crop
                             impossibilities = fun_update_small([i,j], missing_crop, impossibilities, coords_all)
@@ -106,10 +111,9 @@ if __name__ == '__main__':
                         elif len_max == size_max_reg:
                             bool_max = False
                             break
-
+                    # input(len(list_regions))
                     if bool_max:
-
-                        i,j = social[social.index(len_max)][:2]
+                        # i,j = social[social.index(len_max)][:2]
                         max_tmp = 0
                         for a,b in remaining_ters:
                             if list_cultures[a][b] > max_tmp:

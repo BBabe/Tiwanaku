@@ -292,7 +292,9 @@ def fun_forms_in_remaining(i,j, remaining_ters, size_reg, tetris_forms, list_cul
             # Different initial forms, if starting from a different terrain, can be the same
             reg.sort() # list order matters
             if reg not in possible_forms:
+
                 bool_pb = False
+                # if sum([sum(cultures_already[i]) for i in range(len(cultures_already))]):
                 if list_cultures:
                     cultures_already = [list_cultures[i][j] for i,j in reg]
                     cultures_already = sorted(cultures_already, reverse=True)
@@ -300,10 +302,11 @@ def fun_forms_in_remaining(i,j, remaining_ters, size_reg, tetris_forms, list_cul
                         bool_pb = True
                     elif len(cultures_already) > 1:
                         ind = 0
-                        while ind < cultures_already-1 and not bool_pb:
+                        while ind < len(cultures_already)-1 and not bool_pb:
                             bool_pb = (cultures_already[ind] == cultures_already[ind+1])
                             ind += 1
                 if not bool_pb:
+
                     possible_forms.append(reg)
     return possible_forms
 
