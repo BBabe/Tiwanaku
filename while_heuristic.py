@@ -98,7 +98,7 @@ if __name__ == '__main__':
                         ind_max, len_max = max(enumerate(social), key=itemgetter(1))
                         i,j = remaining_cults[ind_max]
                         # len_max = max(social[:][2])
-                        # print(len_max)
+                        print(len_max)
                         if len_max <= size_max_reg-2:
                             break
                         elif len_max == size_max_reg-1:
@@ -162,7 +162,7 @@ if __name__ == '__main__':
                 # print(compteur)
                 list_boards = fun_recursion(remaining_ters0, changing_lists, global_variables, [regions, cultures])
                 compteur += 1
-                input()
+                # input()
 
             list_regions, list_cultures = list_boards
 

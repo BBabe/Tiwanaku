@@ -296,15 +296,16 @@ def fun_forms_in_remaining(i,j, remaining_ters, size_reg, tetris_forms, list_cul
                 bool_pb = False
                 # if sum([sum(cultures_already[i]) for i in range(len(cultures_already))]):
                 if list_cultures:
-                    cultures_already = [list_cultures[i][j] for i,j in reg]
-                    cultures_already = sorted(cultures_already, reverse=True)
-                    if cultures_already[0] > size_reg:
-                        bool_pb = True
-                    elif len(cultures_already) > 1:
-                        ind = 0
-                        while ind < len(cultures_already)-1 and not bool_pb:
-                            bool_pb = (cultures_already[ind] == cultures_already[ind+1])
-                            ind += 1
+                    cultures_already = [list_cultures[i][j] for i,j in reg if list_cultures[i][j]]
+                    if cultures_already:
+                        cultures_already = sorted(cultures_already, reverse=True)
+                        if cultures_already[0] > size_reg:
+                            bool_pb = True
+                        elif len(cultures_already) > 1:
+                            ind = 0
+                            while ind < len(cultures_already)-1 and not bool_pb:
+                                bool_pb = (cultures_already[ind] == cultures_already[ind+1])
+                                ind += 1
                 if not bool_pb:
 
                     possible_forms.append(reg)
