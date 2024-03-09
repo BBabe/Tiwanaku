@@ -7,6 +7,7 @@ For a given size of the board and a given maximum region size, compute all possi
 import json
 import copy
 import time
+import pandas as pd
 import sys
 from random import randrange, choice, shuffle
 import numpy as np
@@ -22,11 +23,11 @@ if __name__ == '__main__':
     ## Input parameters
 
     # Number of lines
-    Ni = 3
+    Ni = 5
     # Number of columns
-    Nj = 3
+    Nj = 5
     # Maximal region size
-    size_max_reg = 4
+    size_max_reg = 5
 
     # Load already existing file
     bool_load = 0
@@ -80,8 +81,10 @@ if __name__ == '__main__':
                 # Update lists with new region and cultures
                 list_regions, list_cultures, remaining_ters = fun_update(region0, cults, list_regions, list_cultures, remaining_ters)
 
+                # print(2*len(list_regions)*' ', 'list_regions = ', list_regions)
                 # End of recursion
                 if not remaining_ters:
+                    print('SOLUTION !')
                     return [list_regions, list_cultures]
 
                 # Recursion
@@ -89,36 +92,52 @@ if __name__ == '__main__':
                     # Update list of impossible cultures on the board, following the neighborhood rule
                     impossibilities = fun_update_bis(region0, cults, impossibilities, coords_all)
 
-                    remaining_cults = copy.deepcopy(remaining_ters)
+                    # remaining_cults = copy.deepcopy(remaining_ters)
+                    remaining_cults = [[a,b] for a,b in remaining_ters if not list_cultures[a][b]]
                     bool_max = True
                     while remaining_cults:
                         # social = [[i,j,len(impossibilities[i][j])] for i,j in remaining_cults]
-                        social = [len(impossibilities[i][j]) for i,j in remaining_cults]
-                        # print(social)
+                        social = [len(impossibilities[a][b]) for a,b in remaining_cults]
+                        # print(2*len(list_regions)*' ', 'len_impos =', social)
                         ind_max, len_max = max(enumerate(social), key=itemgetter(1))
                         i,j = remaining_cults[ind_max]
                         # len_max = max(social[:][2])
-                        print(len_max)
                         if len_max <= size_max_reg-2:
                             break
                         elif len_max == size_max_reg-1:
                             # ind_max = social.index(len_max)
                             # i,j = social[ind_max][:2]
-                            missing_crop = 15-sum(impossibilities[i][j])
+                            missing_crop = sum([a for a in range(1,size_max_reg + 1)])-sum(impossibilities[i][j])
                             list_cultures[i][j] = missing_crop
                             impossibilities = fun_update_small([i,j], missing_crop, impossibilities, coords_all)
                             del remaining_cults[ind_max]
                         elif len_max == size_max_reg:
                             bool_max = False
                             break
-                    # input(len(list_regions))
+
+                    # print(remaining_ters)
+                    # for i in range(len(impossibilities)):
+                    #     print(impossibilities[i])
+                    # print(np.array(list_cultures), '= cultures')
+                    # input()
+
                     if bool_max:
                         # i,j = social[social.index(len_max)][:2]
-                        max_tmp = 0
+
+                        # # Start from terrain with the most coustraints
+                        # max_tmp = 0
+                        # for a,b in remaining_ters:
+                        #     if list_cultures[a][b] > max_tmp:
+                        #         i,j = a,b
+                        #         max_tmp = list_cultures[a][b]
+
+                        # Start from terrain with the most coustraints
+                        max_tmp = size_max_reg + 1
                         for a,b in remaining_ters:
-                            if list_cultures[a][b] > max_tmp:
+                            cult_tmp = list_cultures[a][b]
+                            if cult_tmp and cult_tmp < max_tmp:
                                 i,j = a,b
-                                max_tmp = list_cultures[a][b]
+                                max_tmp = cult_tmp
 
                         # Loop on the size of the new region (containing terrain [i,j]), limited by remaining size
                         size_max_tmp = min(len(remaining_ters), size_max_reg)
@@ -126,6 +145,7 @@ if __name__ == '__main__':
                         possible_sizes = list(range(size_min_tmp, size_max_tmp+1))
                         shuffle(possible_sizes)
 
+                        # print('[i,j] =', i,j)
                         for size_reg in possible_sizes:
 
                             # Loop on all forms of size_reg in remaining_ters
@@ -134,17 +154,54 @@ if __name__ == '__main__':
                             for region in possible_forms:
                                 # fun_print(bool_parallel, list_regions, region0, region, start)
 
-                                # Slower alternative to find possible cultures combinations, instead of what follows
-                                list_possibilities, current_cults, accepted_cults, cult, ind = fun_init_small(size_reg)
-                                list_possibilities = fun_possibilities_recursif([list_possibilities, current_cults, accepted_cults], cult, ind, region, impossibilities)
-                                shuffle(list_possibilities)
-                                for cults in list_possibilities:
-                                    print(2*len(list_regions)*' ', len(list_regions), region, '    ', cults)
-                                    list_boards = fun_recursion(remaining_ters, [list_regions, impossibilities, list_cultures], global_variables, [region, cults])
+                                # # Slower alternative to find possible cultures combinations, instead of what follows
+                                # list_possibilities, current_cults, accepted_cults, cult, ind = fun_init_small(size_reg)
+                                # region_small = [ter for ter in region if not list_cultures[ter[0]][ter[1]]]
+                                # list_possibilities = fun_possibilities_recursif([list_possibilities, current_cults, accepted_cults], cult, ind, region_small, impossibilities)
+                                # shuffle(list_possibilities)
+                                # for cults in list_possibilities:
+                                #     print(2*len(list_regions)*' ', len(list_regions), region, '    ', cults)
+                                #     list_boards = fun_recursion(remaining_ters, [list_regions, impossibilities, list_cultures], global_variables, [region, cults])
+                                #     if list_boards:
+                                #         return list_boards
+
+
+                                cults_list = [list_cultures[a][b] for a,b in region]
+                                ters_remain = [ter for ter in region if not list_cultures[ter[0]][ter[1]]]
+                                cults_remain = list(set(range(1,size_reg+1)) - set(cults_list))
+                                if cults_remain:
+                                    # Loop on all possible cultures order
+                                    for ind_cults in permuts[len(ters_remain)-1]:
+                                        cults_small = [cults_remain[i-1] for i in ind_cults]
+                                        # Check if current cultures order avoids impossibilities
+                                        for ind_cult, cult in enumerate(cults_small):
+                                            a,b = ters_remain[ind_cult]
+                                            if cult in impossibilities[a][b]:
+                                                break # terminate computations from the first impossibility
+
+                                        else: # if no break
+                                            cults_pd = pd.DataFrame(cults_list)
+                                            cults_pd[cults_pd==0] = cults_small
+                                            cults = [cults_pd.loc[i].values[0] for i in range(size_reg)]
+                                            # print(2*len(list_regions)*' ', len(list_regions), region, '    ', cults)
+                                            # input('Prêt ?')
+                                            # print()
+                                            list_boards = fun_recursion(remaining_ters, [list_regions, impossibilities, list_cultures], global_variables, [region, cults])
+                                            if list_boards:
+                                                return list_boards
+
+                                else:
+                                    # print(2*len(list_regions)*' ', len(list_regions), region, '    ', cults)
+                                    list_boards = fun_recursion(remaining_ters, [list_regions, impossibilities, list_cultures], global_variables, [region, cults_list])
                                     if list_boards:
                                         return list_boards
 
                     return []
+
+            ##
+
+            # list_boards = fun_recursion(remaining_ters0, changing_lists, global_variables, [[[0, 1], [1, 0], [1, 1], [2, 0]], [2,3,4,1]])
+            # list_regions, list_cultures = list_boards
 
                 ##
 

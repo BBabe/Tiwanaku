@@ -16,9 +16,9 @@ if __name__ == '__main__':
     ## Input parameters
 
     # Number of lines
-    Ni = 3
+    Ni = 4
     # Number of columns
-    Nj = 3
+    Nj = 4
     # Maximal region size
     size_max_reg = 4
 

@@ -1,6 +1,34 @@
 github : https://github.com/dettweilerjs/dettweilerjs.github.io/blob/master/_posts/2022-04-10-tiwanaku-scenarios.md?plain=1
 simu : https://www.codedna.me/posts/tiwanaku-scenarios.html
 ===================================================================================================
+Méthode BGG
+
+- attention, si combinaison de chiffres n'admet pas de solution pour les régions !
+- 2e phase un peu plus lente
+- accélérer en limitant le nombre de random (et en remontant d'un niveau)
+- faire des boucles for pour l'ensemble des solutions, avec cette vitesse ?
+
+- trouver jeu de couleurs
+- cultures rendant la partie unique
+
+===================================================================================================
+WHILE + heuristique
+
+- si un chiffre nécessaire à la forme est impossible partout, alors...
+
+- je trouve mon code dégueulasse, je me sentirais mieux si j'avais un truc plus épuré...
+
+- s'émanciper du while va peut-être accélérer les choses ? Mais j'ai besoin de revenir sur mes pas, donc de la récursion
+
+- je trouve que j'ai beaucoup de 5, donc mon aléatoire introduit des biais aussi
+--> il faudrait trouver une façon intelligente de les rendre cools, sans que ce soit prévisible lors du jeu
+
+- QUESTION : est-ce que maintenant c'est plus rapide pour trouver toutes les solutions ?
+
+- si c'est trop long, prendre un autre exemple, ça peut accélérer les choses !
+
+
+===================================================================================================
 Remplissage à chaque étape ! pour éviter d'essayer trop de possibilités
 
 while ça bouge:
@@ -148,7 +176,9 @@ PLOTS
 	42
 	29
 
-3_4_5
+3_3_4
+00:00:08
+56
 
 ===================================================================================================
 AUTRES
