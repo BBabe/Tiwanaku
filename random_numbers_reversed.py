@@ -1,15 +1,15 @@
 import time
-start = time.time()
 from random import randrange, choice, shuffle
 import numpy as np
 import json
 import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
 ## Input parameters
 
 # Number of lines
 Ni = 5
 # Number of columns
-Nj = 9
+Nj = 7
 # Maximal region size
 size_max_reg = 5
 
@@ -34,8 +34,18 @@ def fun_neighbors(i,j):
     ''' Coordinates of all 8 neighbors of terrain [i,j] '''
     return [[i+x, j+y] for x in [-1,0,1] for y in [-1,0,1]] # list also contains ter, which is not a problem
 
+def fun_time(start):
+    time_format = '%H:%M:%S'
+    med = time.time()
+    Nseconds = int(med-start)
+    elapsed_time = str(time.strftime(time_format, time.gmtime(Nseconds)))
+    print('Duration =', elapsed_time)
+    return med
+
 ##
 
+print('Generation of cultures...')
+start = time.time()
 Ns = np.full((size_max_reg,),0)
 
 bol = False
@@ -76,7 +86,7 @@ while not bol:
 
         impossibilities = 1.*list_cultures
 
-    ##
+    #
 
     if bol:
         remainings = [[i,j] for i,j in coords_all if not list_cultures[i,j]]
@@ -92,14 +102,17 @@ while not bol:
             bol = False
 
 
-    ##
+    #
 
     # input(list_cultures)
-print(compteur)
-print(list_cultures)
+print('Number of tests =', compteur)
+# print(list_cultures)
 
 Ns[-1] = NN - sum(Ns)
-print([Ns[i]-Ns[i+1] for i in range(len(Ns)-1)] + [Ns[-1]])
+print('Number of regions of size', list(range(1, size_max_reg+1)), '=', [Ns[i]-Ns[i+1] for i in range(len(Ns)-1)] + [Ns[-1]])
+
+start = fun_time(start)
+print()
 
 ##
 
@@ -109,12 +122,14 @@ with open('data/tetris_forms.json', "r") as fp:
 
 ##
 
+print('Associated regions...')
 compt = 0
 bol_filled = True
 while bol_filled:
     compt += 1
     poss = np.ones((Ni,Nj))
     board = np.full((Ni,Nj),0)
+    list_regs = []
 
     bol_filled = True
     ind_reg = 1
@@ -136,6 +151,7 @@ while bol_filled:
         else:
             break
 
+        list_regs.append(reg)
         for a,b in reg:
             board[a,b] = ind_reg
             poss[a,b] = 0
@@ -148,13 +164,79 @@ while bol_filled:
             bol_filled = False
 
 
-print(compt)
-
-print(time.time() - start)
+print('Number of tests =', compt)
+start = fun_time(start)
+print()
 
 ##
 
-plt.close('all')
+print('Possible colors set...')
+# colors = ['brown', 'yellow', 'green', 'blue']
+colors = ['peru', 'gold', 'limegreen', 'steelblue']
+Ncols = len(colors)
+colors_set = set(range(1,Ncols+1))
+
+Nreg = len(list_regs)
+
+bol_no = True
+compt = 0
+while bol_no:
+    compt += 1
+
+    impossibilities = [set() for _ in range(Nreg)]
+    arr_cols = np.full((Ni,Nj),0)
+    cols_used = set()
+    for _ in list_regs:
+
+        # for nocols in impossibilities:
+            # print(nocols)
+        maxi = 0
+        ind_worst_reg = 0
+        mini_bol = False
+        for ind, nocols in enumerate(impossibilities):
+            leni = len(nocols)
+            if leni == Ncols:
+                mini_bol = True
+                break
+            elif leni > maxi:
+                maxi = leni
+                ind_worst_reg = ind
+
+        else:
+            # input(ind_worst_reg)
+            # print()
+            reg = list_regs[ind_worst_reg]
+            cols = list(colors_set - impossibilities[ind_worst_reg])
+            col = choice(cols)
+            cols_used.add(col)
+            impossibilities[ind_worst_reg] = set()
+
+            neighs = []
+            coords_others = [ter for ter in coords_all if (ter not in reg) and (ter not in neighs)]
+            for i,j in reg:
+                arr_cols[i,j] = col
+
+                for neigh in [[i+x, j+y] for x in [-1,0,1] for y in [-1,0,1]]:
+                    if neigh in coords_others and not arr_cols[neigh[0], neigh[1]]:
+                        impossibilities[board[neigh[0], neigh[1]]-1].add(col)
+                        neighs.append(neigh)
+        if mini_bol:
+            break
+    else:
+        if len(cols_used) == Ncols:
+            bol_no = False
+    # input(arr_cols)
+    # print()
+
+
+
+print('Number of tests =', compt)
+start = fun_time(start)
+
+
+##
+
+# plt.close('all')
 
 minor_y = np.arange(0.5, Ni-1)
 minor_x = np.arange(0.5, Nj-1)
@@ -162,7 +244,8 @@ minor_x = np.arange(0.5, Nj-1)
 fig = plt.figure()
 ax = fig.add_subplot(1, 1, 1)
 
-ax.imshow(board, cmap = 'tab20')
+cmap = ListedColormap(colors)
+ax.imshow(arr_cols, cmap = cmap)
 # ax.imshow(list_cultures, cmap = 'tab10')
 
 ax.set_xticks(minor_x, [])#, minor=True)

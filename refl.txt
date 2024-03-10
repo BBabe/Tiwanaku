@@ -4,12 +4,49 @@ simu : https://www.codedna.me/posts/tiwanaku-scenarios.html
 Méthode BGG
 
 - attention, si combinaison de chiffres n'admet pas de solution pour les régions !
-- 2e phase un peu plus lente
-- accélérer en limitant le nombre de random (et en remontant d'un niveau)
+(- 2e phase un peu plus lente
+(- accélérer en limitant le nombre de random (et en remontant d'un niveau)
 - faire des boucles for pour l'ensemble des solutions, avec cette vitesse ?
 
-- trouver jeu de couleurs
 - cultures rendant la partie unique
+
+rmq : il y a cultures et regions !
+mais finalement on s'en fout pour les régions, puisqu'on gagne surtout des points avec les cultures ?
+--> facilité = ne s'occuper que des cultures
+
+
+- j'ai vu que plusieurs régions pouvaient façonner une même grille ! Combien ?
+
+===================================================================================================
+partie "unique"
+
+- je peux aussi compter avec les tuiles, comme heuristiques pour aider
+
+
+- partie commune à toutes les solutions ?
+- choisir une solution au hasard
+- choisir des coords au hasard jusqu'à ce qu'il y ait une seule solution qui corresponde
+
+- attention, c'est tout de même une minute pour la résolution, en taille 5...
+--> pour l'opérationnel, comment être sûr que la solution sera unique ?
+	regarder les propriétés des cases, à quel point elles sont contraintes (sortir le impossibilities, dont je ne me sers pas d'ailleurs !)
+	mais ces contraintes dépendent de cases choisies préalablement justement
+
+utiliser mon solveur à partir d'une grille déjà remplie
+--> se trimballer un tableau et faire des if un peu moche
+--> s'arrêter dès que 2 solutions !
+--> transformer récursion en while ?
+
+définir carrément un autre truc, qui part de la solution sélectionnée, pour aller jusqu'au noyau nécessaire ?
+--> à la fin, il y a déjà des crops à fixer car ils ne sont pas contraints, mais après ?
+
+
+- rmq : peut-être que c'est seulement ces non contraints qui sont fixés, et après de toute façon on le découvrira bien au cours du jeu, non ?
+--> non, il y a aussi quand il y a un choix, qui se répercute sur plusieurs cases
+--> et sûrement d'autres cas
+
+- revenir à la construction des chiffres de la grille (mais il y a aussi les formes construites indépendamment...), pour voir si je peux stocker des informations importantes
+
 
 ===================================================================================================
 WHILE + heuristique
