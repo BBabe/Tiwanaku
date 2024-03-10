@@ -1,6 +1,13 @@
 github : https://github.com/dettweilerjs/dettweilerjs.github.io/blob/master/_posts/2022-04-10-tiwanaku-scenarios.md?plain=1
 simu : https://www.codedna.me/posts/tiwanaku-scenarios.html
 ===================================================================================================
+Interaction avec PC, et c'est fini, je peux mettre sur portable  (il faudra mettre au propre tout de même)
+
+- finalement, je pourrais sauter la première étape, et faire comme avant ! (c'est juste que là je suis sûr qu'il y a au moins une solution !)
+- en taille 9, toujours un peu long de trouver les régions, et surtout toutes les solutions
+
+
+===================================================================================================
 Méthode BGG
 
 - attention, si combinaison de chiffres n'admet pas de solution pour les régions !
@@ -23,7 +30,9 @@ partie "unique"
 - je peux aussi compter avec les tuiles, comme heuristiques pour aider
 
 
-- partie commune à toutes les solutions ?
+- c'est pas si long en partant des régions les plus petites !
+--> vérifier, il y a peut-être quand même moyen d'accélérer, j'ai fait pas mal d'avancement depuis !
+
 - choisir une solution au hasard
 - choisir des coords au hasard jusqu'à ce qu'il y ait une seule solution qui corresponde
 
@@ -33,6 +42,7 @@ partie "unique"
 	mais ces contraintes dépendent de cases choisies préalablement justement
 
 utiliser mon solveur à partir d'une grille déjà remplie
+--> partir des non contraints !
 --> se trimballer un tableau et faire des if un peu moche
 --> s'arrêter dès que 2 solutions !
 --> transformer récursion en while ?
@@ -44,8 +54,28 @@ définir carrément un autre truc, qui part de la solution sélectionnée, pour 
 - rmq : peut-être que c'est seulement ces non contraints qui sont fixés, et après de toute façon on le découvrira bien au cours du jeu, non ?
 --> non, il y a aussi quand il y a un choix, qui se répercute sur plusieurs cases
 --> et sûrement d'autres cas
+--> et je pense qu'il faut vraiment s'assurer de l'unicité !
 
 - revenir à la construction des chiffres de la grille (mais il y a aussi les formes construites indépendamment...), pour voir si je peux stocker des informations importantes
+--> bof vu que c'était fait aléatoirement
+
+- apprendre des choses de ce que je viens de faire !
+
+- jeu actuel : ça va de 5 à 12, même variabilité pour les petits
+
+- partir de l'ensemble des solutions !
+
+______________________________________
+- partie commune à toutes les solutions : les cases de départ ne seront pas à chercher dedans
+- s'en sortir pour ne pas avoir à re-résoudre !
+
+les communs : clairement il y en a pas assez en commun !
+
+dénombrer le nombre de solutions qui partagent la même case, pour chaque case
+--> poser là où c'est le plus petit, et espérer que ça finisse par marcher
+
+--> faire du random plutôt
+
 
 
 ===================================================================================================

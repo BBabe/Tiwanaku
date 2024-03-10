@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from operator import itemgetter
 import copy
+import pandas as pd
+from tabulate import tabulate
 ## Input parameters
 
 # Number of lines
@@ -198,15 +200,25 @@ print('Number of tests =', compt)
 start = fun_time(start)
 print()
 
+sorted_regs = sorted(list_regs, key = len)
+
+##
+
+board = np.full((Ni,Nj),0)
+for ind, reg in enumerate(sorted_regs):
+    for i,j in reg:
+        board[i,j] = ind+1
+
 ##
 
 print('Possible colors set...')
 # colors = ['brown', 'yellow', 'green', 'blue']
 colors = ['peru', 'gold', 'limegreen', 'steelblue']
+colors_small = ['M', 'J', 'V', 'B']
 Ncols = len(colors)
 colors_set = set(range(1,Ncols+1))
 
-Nreg = len(list_regs)
+Nreg = len(sorted_regs)
 
 bol_no = True
 compt = 0
@@ -216,7 +228,7 @@ while bol_no:
     impossibilities = [set() for _ in range(Nreg)]
     arr_cols = np.full((Ni,Nj),0)
     cols_used = set()
-    for _ in list_regs:
+    for _ in sorted_regs:
 
         maxi = 0
         ind_worst_reg = 0
@@ -231,7 +243,7 @@ while bol_no:
                 ind_worst_reg = ind
 
         else:
-            reg = list_regs[ind_worst_reg]
+            reg = sorted_regs[ind_worst_reg]
             cols = list(colors_set - impossibilities[ind_worst_reg])
             col = choice(cols)
             cols_used.add(col)
@@ -313,48 +325,138 @@ solution0 = []
 impossibilities0 = [[[] for j in jz] for i in iz]
 list_solutions0 = []
 cult_region = []
-list_regions = list_regs
+list_regions = sorted_regs
 # list_regions = [[[0, 0], [0, 1], [1,0]], [[0,2], [0,3], [1, 2]]]
 ind = 0
 
 list_solutions = rec_maxi(solution0, impossibilities0, list_solutions0, cult_region, list_regions, ind)
 # print(list_solutions)
+Nsol = len(list_solutions)
+print('Number of solutions =', Nsol)
+start = fun_time(start)
+print()
+
+##
+print('Uniqueness...')
+
+array_solutions = np.full((Nsol, Ni, Nj), 0)
+for ind_sol in range(Nsol):
+    for ind_reg, reg in enumerate(sorted_regs):
+        for ind_ter, ter in enumerate(reg):
+            array_solutions[ind_sol, ter[0], ter[1]] = list_solutions[ind_sol][ind_reg][ind_ter]
+
+#
+# unique = np.full((Ni,Nj), True)
+# for ind_sol in range(Nsol):
+#     unique *= (array_solutions[ind_sol,:,:] == list_cultures)
+#
+# print(unique*1)
+#
+
+# list_unique = []
+bol0 = True
+inds = set(range(Nsol))
+unique = np.full((Ni,Nj), 0)
+while bol0:
+
+    nbs = np.full((Ni,Nj), 0)
+    for ind_sol in inds:
+        nbs += (array_solutions[ind_sol,:,:] == list_cultures)
+
+    i,j = np.unravel_index(np.argmin(nbs), nbs.shape)
+    # list_unique.append([i,j])
+    unique[i,j] = list_cultures[i,j]
+    # print(nbs)
+
+    inds = set([ind for ind in inds if array_solutions[ind,i,j]==list_cultures[i,j]])
+    bol0 = (len(inds) > 1)
+    print([i,j], len(inds))
 
 start = fun_time(start)
 
 ##
+arr_cols_reduced = 1.*arr_cols
+for i in iz:
+    for j in jz:
+        if not unique[i,j]:
+            arr_cols_reduced[i,j] = np.nan
 
-plt.close('all')
+##
+#
+# tmp = [[i,j] for i in iz for j in jz if unique[i,j]]
+# for i,j in tmp:
+#     print(list_cultures[i,j], a[i,j])
+#
+# #
+# for ind_sol in range(Nsol):
+#     if (array_solutions[ind_sol,:,:]==list_cultures).all():
+#         print(ind_sol)
 
-minor_y = np.arange(0.5, Ni-1)
-minor_x = np.arange(0.5, Nj-1)
+    ##
 
-ind_max = 5
-for ind in range(ind_max):
-    board_solutions = np.full((Ni,Nj), 0)
-    for ind_reg, reg in enumerate(list_regs):
-        for ind_ter, ter in enumerate(reg):
-            board_solutions[ter[0],ter[1]] = list_solutions[ind][ind_reg][ind_ter]
+bol_plot = 0
+if bol_plot:
+    plt.close('all')
 
+    minor_y = np.arange(0.5, Ni-1)
+    minor_x = np.arange(0.5, Nj-1)
 
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
-
     cmap = ListedColormap(colors)
-    ax.imshow(arr_cols, cmap = cmap)
-    # ax.imshow(list_cultures, cmap = 'tab10')
-
+    ax.imshow(arr_cols_reduced, cmap = cmap)
     ax.set_xticks(minor_x, [])#, minor=True)
     ax.set_yticks(minor_y, [])#, minor = True)
     ax.grid(True)#, which='minor')#, color='k', alpha=0.2)
-
     for i in iz:
         for j in jz:
-            # text = ax.text(j, i, list_cultures[i][j],ha="center", va="center", color="k", fontsize=20)
-            text = ax.text(j, i, board_solutions[i,j],ha="center", va="center", color="k", fontsize=20)
-            # text = ax.text(j, i, solution[i][j],ha="center", va="center", color="k", fontsize=20)
+            if unique[i][j]:
+                text = ax.text(j, i, unique[i][j],ha="center", va="center", color="k", fontsize=20)
 
-plt.show()
+    if 0:
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+        ax.imshow(arr_cols, cmap = cmap)
+        ax.set_xticks(minor_x, [])#, minor=True)
+        ax.set_yticks(minor_y, [])#, minor = True)
+        ax.grid(True)#, which='minor')#, color='k', alpha=0.2)
+        for i in iz:
+            for j in jz:
+                # unique  list_cultures  board_solutions  solution
+                text = ax.text(j, i, list_cultures[i][j],ha="center", va="center", color="k", fontsize=20)
+
+    plt.show()
+
+##
+
+df = pd.DataFrame(unique)
+df[df == 0] = ''
+for i in iz:
+    for j in jz:
+        if unique[i,j]:
+            df[j][i] = colors_small[arr_cols[i,j]-1] + ' ' +  str(df[j][i])
+
+while 1:
+    print(tabulate(df.values, tablefmt='grid'))
+    print()
+    print('Which type ?')
+    print('  0 = Color')
+    print('  1 = Number')
+    typ = int(input())
+    print()
+
+    print('Where ?')
+    i = int(input('i = '))
+    j = int(input('j = '))
+    print()
+    col = colors_small[arr_cols[i,j]-1]
+    num = list_cultures[i,j]
+    if typ == 0:
+        df[j][i] = col
+        print(df[j][i])
+    elif typ == 1:
+        df[j][i] = col + ' ' +  str(num)
+        print(df[j][i])
 
 
 ## OLD Resolution
