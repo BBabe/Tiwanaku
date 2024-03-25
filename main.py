@@ -7,6 +7,7 @@ import numpy as np
 import json
 import copy
 import pandas as pd
+import os
 from tabulate import tabulate
 from itertools import permutations
 from operator import itemgetter
@@ -51,10 +52,10 @@ colors_small = ['M', 'J', 'V', 'B']
 Ncols = len(colors)
 colors_set = set(range(1,Ncols+1))
 
-path_df = '0df.npy'
-path_df0 = '0df0.npy'
-
-path_tetris = 'data/tetris_forms.json'
+folder_data = 'data'
+path_df = os.path.join(folder_data,'df.npy')
+path_df0 = os.path.join(folder_data,'df0.npy')
+path_tetris = os.path.join(folder_data,'tetris_forms.json')
 
 ##
 ##################################
