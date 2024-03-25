@@ -1,7 +1,85 @@
 github : https://github.com/dettweilerjs/dettweilerjs.github.io/blob/master/_posts/2022-04-10-tiwanaku-scenarios.md?plain=1
 simu : https://www.codedna.me/posts/tiwanaku-scenarios.html
 ===================================================================================================
+DEBUG
+
+- attention, fonction dans tiwa_accel ne marche plus, ni la nouvelle... Et ce de façon systématique...
+--> ne trouve pas les mêmes solutions maintenant... : JE N'AI PAS ENCORE RÉUSSI À REPRODUIRE CE COMPORTEMENT
+
+
+- il n'y aurait plus de problème, mais parfois je ne les trouve pas toutes...
+--> si ! vérifier que des cultures ne sont pas côte à côte
+- il peut y avoir plusieurs fois la même solution, ce qui ne devrait pas être le cas...
+
+- IL PEUT Y AVOIR DES IMPOS=5 !...
+
+- de toute façon c'est beaucoup plus lent...
+
+- ne marche pas avec tous les exmples, mon code test !
+
+
+===================================================================================================
+ACCÉLÉRER ALL SOLUTIONS !
+
+changer de façon de faire !
+- faire une loop sur les possibilités qui restent pour une case
+--> par quelle case commencer à chaque fois ? là où il n'y a pas trop de choix. Où là où il y a beaucoup de voisins
+
+- comment ne pas refaire des trucs inutiles ?
+
+- change d'un coup sur l'autre...
+
+- tester si solutions ne respectent pas règles
+--> forcément, si nb solutions dépend des choix... ou alors il manque des solutions parfois
+
+
+
+
+questions :
+- comment faire si erreur ?
+
+- RÉPONSE : ne plus forcément remplir par région, avec cette rapidité de résolution, mais faire un choix de case à chaque fois
+--> dès que 5 impos, fini
+	en gros, faire un test de la taille de impos dès qu'il y a remplissage effectif
+	créer des mini-fonctions pour les actions qu'il y a à mener conjointement, pour que ce soit moins sale
+((--> remplir toutes les cases où il n'y a plus qu'un choix, ça n'apportera pas d'info
+	en fait, on est plus obligé de remplir, c'est juste impos qui fait foi !)
+--> sinon, obligé de faire un choix, qui va réactualiser les bails
+
+
+
+
+- va vraiment accélérer ?
+- maj cultures à chaque récu puis
+- while liste de regions-cultures qui ont changé
+- tout traiter comme une intersection [for if not impos] (ne pas remplir à ce moment, mais c'est 1 autre traitement des impos)
+- stopper si full imposs
+
+
+
+
+
+
+==============================
+- de la région la plus petite à la plus grande, je pense que c'est très bien
+
+(- quelles sont les autres heuristiques pour remplir ?
+(--> ne pas faire qu'avec les pièces placées, mais aussi avec les intersections des possibilités qu'il reste...
+
+- pour l'instant, ça fait juste avec les impossibilités des pièces placées
+--> besoin de faire rec_mini ? ça serait pas plus rapide de checker toutes les combinaisons ?
+---> pas d'impact, essayer d'aller vers les territoires les plus contraints (plutôt que les plus petits !)
+	comment définir cette contrainte ? c'est en gros le nombre de combinaisons...
+	c'est comme si je faisais 2 classements : d'abord par contraintes, puis par taille (ce qui compte le plus)
+	--> fonction de reclassement de la liste des régions à chaque fois
+
+(- s'assurer qu'il y a au moins 5 tuiles pour poser les otoma dessus, pour les grandes cartes !)
+===================================================================================================
 Interaction avec PC, et c'est fini, je peux mettre sur portable  (il faudra mettre au propre tout de même)
+
+input(quel type de test)
+
+
 
 - finalement, je pourrais sauter la première étape, et faire comme avant ! (c'est juste que là je suis sûr qu'il y a au moins une solution !)
 - en taille 9, toujours un peu long de trouver les régions, et surtout toutes les solutions
