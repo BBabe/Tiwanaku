@@ -1,72 +1,65 @@
 '''
 
 '''
+print('Loading modules...')
 import time
-from random import randrange, choice, shuffle
 import numpy as np
-import json
-import copy
 import pandas as pd
 import os
-from tabulate import tabulate
-from itertools import permutations
-from operator import itemgetter
 # import warnings
 # warnings.filterwarnings("ignore")
 
 # local modules
-from functions import put_numbers, put_regions, put_colors, rec_maxi, init_rec, init_board, fun_update_small, fun_neighbors, fun_time, fun_permut
+from functions import put_numbers, put_regions, put_colors, rec_maxi, init_rec, init_board, interaction, fun_plot, fun_time, fun_permut
+print()
 ## Input parameters
+# 0 = plot whole solution; 1 = interact with user throughout the game
+bol_interaction = 0
 
-# Smartphone app can reset and lose progress --> save progress (bol = bool...)
-# and load it if necessary
+# Smartphone app can reset and lose progress --> save progress and load it if necessary
 bol_save = 1 # No need when on computer
 # bol_save = int(input('Generate new game (1) or load previous one (0)? '))
 
 # Number of columns = 5 (easy) or 9 (difficult)
 Nj = 5
+
+# Paths of data: board in progress and tetris forms
+folder_data = 'data'
+path_df = os.path.join(folder_data,'board_in_progress.npy')
+path_df0 = os.path.join(folder_data,'board_complete.npy')
+path_tetris = os.path.join(folder_data,'tetris_forms.json')
+
+## Other parameters
+
 # Number of lines
 Ni = 5
-# Maximal region size
-size_max_reg = 5
-
-##
-
-# List of possible cultures
-cults = range(1, size_max_reg+1)
-# Set of possible cultures
-set_max = set(cults)
-# Se
-sets = [set_max - set([ind]) for ind in cults]
-
 NN = Ni*Nj
+# Coordinates
 iz = range(Ni)
 jz = range(Nj)
-# All terrains coordinates
 coords_all = [[i, j] for i in iz for j in jz]
 
-sep = ";"
+# Maximal region size = Maximum culture number
+size_max_reg = 5
 
+# Colors corresponding to the game
 colors = ['peru', 'gold', 'limegreen', 'steelblue']
 colors_small = ['M', 'J', 'V', 'B']
 Ncols = len(colors)
 colors_set = set(range(1,Ncols+1))
 
-folder_data = 'data'
-path_df = os.path.join(folder_data,'df.npy')
-path_df0 = os.path.join(folder_data,'df0.npy')
-path_tetris = os.path.join(folder_data,'tetris_forms.json')
+global_var = Ni, Nj, path_df, path_df0, path_tetris, NN, iz, jz, coords_all, size_max_reg, colors, colors_small, Ncols, colors_set
 
-##
 ##################################
-##
+##################################
+##################################
 
 if bol_save:
     ##################################
     print('Generation of cultures...')
     start = time.time()
 
-    compteur, Ns, list_cultures, list_per_cults, impossibilities = put_numbers([Ni, Nj, NN, size_max_reg, coords_all])
+    compteur, Ns, list_cultures, list_per_cults, impossibilities = put_numbers(global_var)
 
     print('Number of tests =', compteur)
     start = fun_time(start)
@@ -75,7 +68,6 @@ if bol_save:
     ##################################
     print('Associated regions...')
 
-    global_var = path_tetris, NN, Ni, Nj, coords_all
     compt, sorted_regs, board = put_regions(global_var, Ns, list_per_cults, list_cultures)
 
     print('Number of tests =', compt)
@@ -85,37 +77,35 @@ if bol_save:
     ##################################
     print('Possible colors set...')
 
-    global_var = Ni, Nj, Ncols, colors_set, coords_all
     arr_cols = put_colors(global_var, sorted_regs, board)
 
     print()
 
     ##################################
-    print('All solutions...')
+    print('All solutions corresponding to these regions...')
 
     permuts = fun_permut(size_max_reg)
-    global_var = size_max_reg, iz, jz, coords_all
     solution0, impossibilities0, list_solutions0, cult_region, list_regions, ind = init_rec(global_var, sorted_regs, board)
-    list_solutions = rec_maxi(solution0, impossibilities0, list_solutions0, cult_region, list_regions, ind, [permuts, coords_all])
+    list_solutions = rec_maxi(solution0, impossibilities0, list_solutions0, cult_region, list_regions, ind, permuts, coords_all)
 
-    print('Number of solutions =', len(list_solutions))
+    Nsol = len(list_solutions)
+    print('Number of solutions =', Nsol)
     start = fun_time(start)
     print()
 
     ##################################
-    print('Initialize board...')
+    print('Initialize board with unique solution...')
 
-    global_var = Ni, Nj, iz, jz, path_df0, path_df, colors_small
-    df0, df = init_board(global_var, sorted_regs, list_solutions, list_cultures, arr_cols)
+    df0, df = init_board(global_var, sorted_regs, list_solutions, Nsol, list_cultures, arr_cols)
 
     print()
     print()
 
-    ##
     ##################################
-    ##
+    ##################################
+    ##################################
 
-
+# Load
 else:
     np_tmp = np.load(path_df0, allow_pickle=True)
     df0 = pd.DataFrame(np_tmp)
@@ -125,38 +115,12 @@ else:
 
 ##################################
 
-Ntuiles = np.full((Ncols,), 0)
-for i in iz:
-    for j in jz:
-        ind_col = colors_small.index(df0[j][i][0])
-        Ntuiles[ind_col] += 1
+# Accompany user throughout the game
+if bol_interaction:
 
-#
-while 1:
-    remain_tmp = ''
-    for ind in range(Ncols):
-        remain_tmp += ' {} = {} '.format(colors_small[ind], Ntuiles[ind])
-    print(tabulate(df.values, tablefmt='grid'))
-    print(remain_tmp, '(remaining terrains)')
-    print()
-    typ = int(input('Which type ? (0 = Color ; 1 = Number)  '))
-    print()
+    interaction(global_var, df0, df)
 
-    print('Where ?')
-    i = int(input('i = '))
-    j = int(input('j = '))
-    print()
+# Plot whole solution chosen by user
+else:
 
-    col = df0[j][i][0]
-    ind_col = colors_small.index(col)
-    if not df[j][i]:
-        Ntuiles[ind_col] -= 1
-    num = df0[j][i][-1]
-    # num = list_cultures[i,j]
-    if typ == 0:
-        df[j][i] = col
-        print(df[j][i])
-    elif typ == 1:
-        df[j][i] = col + ' ' +  str(num)
-        print('ANSWER =', df[j][i])
-    np.save(path_df, df)
+    fun_plot(global_var, list_solutions, Nsol, arr_cols, sorted_regs)

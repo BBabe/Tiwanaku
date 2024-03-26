@@ -10,6 +10,8 @@ import pandas as pd
 from tabulate import tabulate
 from itertools import permutations
 from operator import itemgetter
+import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
 ## General
 
 
@@ -46,18 +48,28 @@ def fun_permut(size_max_reg):
 ##
 
 def put_numbers(global_var):
-    Ni, Nj, NN, size_max_reg, coords_all = global_var
+    '''
+
+    '''
+    Ni, Nj, path_df, path_df0, path_tetris, NN, iz, jz, coords_all, size_max_reg, colors, colors_small, Ncols, colors_set = global_var
+
     Ns = np.full((size_max_reg,),0)
-    bol = False
+    # Information on number of tests
     compteur = 0
+    bol = False
+    # Loop until solution found
     while not bol:
         compteur += 1
         bol = True
-        Nmin = Nj
-        Nmax = 2*Nj
+
+        # Initialization
+        Nmin = Nj # sdf
+        Nmax = 2*Nj # sdf
         list_cultures = np.full((Ni,Nj),0)
         list_per_cults = [[] for _ in range(size_max_reg)]
         impossibilities = np.zeros((Ni, Nj))
+
+        # Add crops (= cultures) on board in increasing order
         for crop in range(1, size_max_reg):
             N = randrange(Nmin, Nmax+1)
 
@@ -100,7 +112,7 @@ def put_numbers(global_var):
                     list_cultures[a,b] = crop
                     list_per_cults[crop-1].append([a,b])
                     impossibilities = fun_update_small(a,b, crop, impossibilities, coords_all)
-            else:
+            else: # break
                 bol = False
     return compteur, Ns, list_cultures, list_per_cults, impossibilities
 
@@ -109,7 +121,7 @@ def put_numbers(global_var):
 
 
 def put_regions(global_var, Ns, list_per_cults, list_cultures):
-    path_tetris, NN, Ni, Nj, coords_all = global_var
+    Ni, Nj, path_df, path_df0, path_tetris, NN, iz, jz, coords_all, size_max_reg, colors, colors_small, Ncols, colors_set = global_var
 
     # All possible region forms
     with open(path_tetris, "r") as fp:
@@ -128,19 +140,14 @@ def put_regions(global_var, Ns, list_per_cults, list_cultures):
     while bol_filled:
         compt += 1
         poss = np.ones((Ni,Nj))
-        # board = np.full((Ni,Nj),0)
         list_regs = []
 
         bol_filled = True
         ind_reg = 1
-        # while bol_filled:
         list_per_cults_copy = copy.deepcopy(list_per_cults)
-        # shuffle(Nsizes_list)
         for size in Nsizes_list:
 
             i,j = choice(list_per_cults_copy[size-1])
-            # i,j = np.unravel_index(np.argmax(list_cultures*poss), list_cultures.shape)
-            # size = list_cultures[i,j]
             seti = set(range(1,size+1))
 
             all_regs = [[[a+i,b+j] for a,b in reg] for reg in tetris_forms[size-1]]
@@ -157,7 +164,6 @@ def put_regions(global_var, Ns, list_per_cults, list_cultures):
 
             list_regs.append(reg)
             for a,b in reg:
-                # board[a,b] = ind_reg
                 poss[a,b] = 0
                 list_per_cults_copy[list_cultures[a,b]-1].remove([a,b])
 
@@ -182,7 +188,7 @@ def put_regions(global_var, Ns, list_per_cults, list_cultures):
 
 
 def put_colors(global_var, sorted_regs, board):
-    Ni, Nj, Ncols, colors_set, coords_all = global_var
+    Ni, Nj, path_df, path_df0, path_tetris, NN, iz, jz, coords_all, size_max_reg, colors, colors_small, Ncols, colors_set = global_var
     Nreg = len(sorted_regs)
 
     bol_no = True
@@ -235,7 +241,7 @@ def put_colors(global_var, sorted_regs, board):
 
 
 def init_rec(global_var, sorted_regs, board):
-    size_max_reg, iz, jz, coords_all = global_var
+    Ni, Nj, path_df, path_df0, path_tetris, NN, iz, jz, coords_all, size_max_reg, colors, colors_small, Ncols, colors_set = global_var
     # cultures_types = [[i+1 for i in range(size)] for size in range(1,size_max_reg+1)]
     solution0 = []
     list_solutions0 = []
@@ -259,8 +265,7 @@ def init_rec(global_var, sorted_regs, board):
     return solution0, impossibilities0, list_solutions0, cult_region, list_regions, ind
 
 
-def rec_maxi(solution0, impossibilities0, list_solutions0, cult_region, list_regions, ind, global_var):
-    permuts, coords_all = global_var
+def rec_maxi(solution0, impossibilities0, list_solutions0, cult_region, list_regions, ind, permuts, coords_all):
     solution = solution0.copy()
     impossibilities = copy.deepcopy(impossibilities0)
     list_solutions = list_solutions0.copy()
@@ -294,16 +299,131 @@ def rec_maxi(solution0, impossibilities0, list_solutions0, cult_region, list_reg
                 if cult in impossibilities[a][b]:
                     break # terminate computations from the first impossibility
             else: # if no break
-                list_solutions = rec_maxi(solution, impossibilities, list_solutions, cult_region, list_regions, ind+1, global_var)
-
-
-        # list_cult_region = rec_mini([], [], cultures_types[len(region)-1], region, [], 0, impossibilities)
-        # for cult_region in list_cult_region:
-        #     list_solutions = rec_maxi(solution, impossibilities, list_solutions, cult_region, list_regions, ind+1)
+                list_solutions = rec_maxi(solution, impossibilities, list_solutions, cult_region, list_regions, ind+1, permuts, coords_all)
 
     return list_solutions
 
 
+##
+
+def init_board(global_var, sorted_regs, list_solutions, Nsol, list_cultures, arr_cols):
+    Ni, Nj, path_df, path_df0, path_tetris, NN, iz, jz, coords_all, size_max_reg, colors, colors_small, Ncols, colors_set = global_var
+    array_solutions = np.full((Nsol, Ni, Nj), 0)
+    for ind_sol in range(Nsol):
+        for ind_reg, reg in enumerate(sorted_regs):
+            for ind_ter, ter in enumerate(reg):
+                array_solutions[ind_sol, ter[0], ter[1]] = list_solutions[ind_sol][ind_reg][ind_ter]
+
+    bol0 = True
+    inds = set(range(Nsol))
+    unique = np.full((Ni,Nj), 0)
+    while bol0:
+
+        nbs = np.full((Ni,Nj), 0)
+        for ind_sol in inds:
+            nbs += (array_solutions[ind_sol,:,:] == list_cultures)
+
+        i,j = np.unravel_index(np.argmin(nbs), nbs.shape)
+        unique[i,j] = list_cultures[i,j]
+
+        inds = set([ind for ind in inds if array_solutions[ind,i,j]==list_cultures[i,j]])
+        bol0 = (len(inds) > 1)
+
+    df0 = pd.DataFrame(list_cultures)
+    df = df0.copy()
+    for i in iz:
+        for j in jz:
+            ind_col = arr_cols[i,j]-1
+            df0[j][i] = colors_small[ind_col] + ' ' +  str(df0[j][i])
+            if not int(unique[i,j]):
+                df[j][i] = ''
+            else:
+                df[j][i] = df0[j][i]
+
+    np.save(path_df0, df0.values)
+    np.save(path_df, df.values)
+    return df0, df
+
+##
+
+def interaction(global_var, df0, df):
+    Ni, Nj, path_df, path_df0, path_tetris, NN, iz, jz, coords_all, size_max_reg, colors, colors_small, Ncols, colors_set = global_var
+    Ntuiles = np.full((Ncols,), 0)
+    for i in iz:
+        for j in jz:
+            ind_col = colors_small.index(df0[j][i][0])
+            Ntuiles[ind_col] += 1
+
+    #
+    while 1:
+        remain_tmp = ''
+        for ind in range(Ncols):
+            remain_tmp += ' {} = {} '.format(colors_small[ind], Ntuiles[ind])
+        print(tabulate(df.values, tablefmt='grid'))
+        print(remain_tmp, '(remaining terrains)')
+        print()
+        typ = int(input('Which type ? (0 = Color ; 1 = Number)  '))
+        print()
+
+        print('Where ?')
+        i = int(input('i = '))
+        j = int(input('j = '))
+        print()
+
+        col = df0[j][i][0]
+        ind_col = colors_small.index(col)
+        if not df[j][i]:
+            Ntuiles[ind_col] -= 1
+        num = df0[j][i][-1]
+        # num = list_cultures[i,j]
+        if typ == 0:
+            df[j][i] = col
+            print(df[j][i])
+        elif typ == 1:
+            df[j][i] = col + ' ' +  str(num)
+            print('ANSWER =', df[j][i])
+        np.save(path_df, df)
+
+
+def fun_plot(global_var, list_solutions, Nsol, arr_cols, sorted_regs):
+    Ni, Nj, path_df, path_df0, path_tetris, NN, iz, jz, coords_all, size_max_reg, colors, colors_small, Ncols, colors_set = global_var
+    ft = 40
+    ind = int(input('Which solution to plot, between 0 and {}? '.format(Nsol-1)))
+    sol_list = list_solutions[ind]
+    sol_array = np.full((Ni, Nj), 0)
+    for ind_reg, sol_reg in enumerate(sol_list):
+        reg = sorted_regs[ind_reg]
+        for ind_ter, cult in enumerate(sol_reg):
+            i,j = sorted_regs[ind_reg][ind_ter]
+            sol_array[i,j] = sol_list[ind_reg][ind_ter]
+
+    plt.close('all')
+
+    minor_y = np.arange(0.5, Ni-1)
+    minor_x = np.arange(0.5, Nj-1)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+
+    cmap = ListedColormap(colors)
+    ax.imshow(arr_cols, cmap = cmap)
+
+    ax.set_xticks(minor_x, [])
+    ax.set_yticks(minor_y, [])
+    ax.grid(True)
+
+    for i in iz:
+        for j in jz:
+            text = ax.text(j, i, sol_array[i,j],ha="center", va="center", color="k", fontsize=ft)
+
+    plt.show()
+
+##
+
+# # Set of possible cultures
+# set_max = set(range(1, size_max_reg+1))
+# # All cultures except one
+# sets = [set_max - set([ind]) for ind in set_max]
 def fill_impos(impos, sorted_regs, board):
 # if 1:
     ''' Tant qu'il y a des régions qui ont subi des modifications... '''
@@ -373,6 +493,10 @@ def fill_impos(impos, sorted_regs, board):
     return False, impos
 
 
+        # list_cult_region = rec_mini([], [], cultures_types[len(region)-1], region, [], 0, impossibilities)
+        # for cult_region in list_cult_region:
+        #     list_solutions = rec_maxi(solution, impossibilities, list_solutions, cult_region, list_regions, ind+1, permuts, coords_all)
+
 # def rec_mini(list_region0, culture, cul_remaining0, region, list_lists0, ind, impossibilities):
 #     list_region = list_region0.copy()
 #     cul_remaining = cul_remaining0.copy()
@@ -391,44 +515,3 @@ def fill_impos(impos, sorted_regs, board):
 #             list_lists = rec_mini(list_region, culture, cul_remaining, region, list_lists, ind+1, impossibilities)
 #
 #     return list_lists
-
-##
-
-def init_board(global_var, sorted_regs, list_solutions, list_cultures, arr_cols):
-    Ni, Nj, iz, jz, path_df0, path_df, colors_small = global_var
-    Nsol = len(list_solutions)
-    array_solutions = np.full((Nsol, Ni, Nj), 0)
-    for ind_sol in range(Nsol):
-        for ind_reg, reg in enumerate(sorted_regs):
-            for ind_ter, ter in enumerate(reg):
-                array_solutions[ind_sol, ter[0], ter[1]] = list_solutions[ind_sol][ind_reg][ind_ter]
-
-    bol0 = True
-    inds = set(range(Nsol))
-    unique = np.full((Ni,Nj), 0)
-    while bol0:
-
-        nbs = np.full((Ni,Nj), 0)
-        for ind_sol in inds:
-            nbs += (array_solutions[ind_sol,:,:] == list_cultures)
-
-        i,j = np.unravel_index(np.argmin(nbs), nbs.shape)
-        unique[i,j] = list_cultures[i,j]
-
-        inds = set([ind for ind in inds if array_solutions[ind,i,j]==list_cultures[i,j]])
-        bol0 = (len(inds) > 1)
-
-    df0 = pd.DataFrame(list_cultures)
-    df = df0.copy()
-    for i in iz:
-        for j in jz:
-            ind_col = arr_cols[i,j]-1
-            df0[j][i] = colors_small[ind_col] + ' ' +  str(df0[j][i])
-            if not int(unique[i,j]):
-                df[j][i] = ''
-            else:
-                df[j][i] = df0[j][i]
-
-    np.save(path_df0, df0.values)
-    np.save(path_df, df.values)
-    return df0, df

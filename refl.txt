@@ -1,6 +1,17 @@
 github : https://github.com/dettweilerjs/dettweilerjs.github.io/blob/master/_posts/2022-04-10-tiwanaku-scenarios.md?plain=1
 simu : https://www.codedna.me/posts/tiwanaku-scenarios.html
 ===================================================================================================
+PROPRE
+
+- un seul global_var, pour que ce soit vraiment utile
+- choses à centraliser entre les différentes fonctions peut-être
+- commentaires
+- réduire import
+- séquencer en plus de fonctions
+- issues
+- readme
+
+===================================================================================================
 DEBUG
 
 - attention, fonction dans tiwa_accel ne marche plus, ni la nouvelle... Et ce de façon systématique...
