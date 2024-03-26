@@ -65,25 +65,25 @@ def put_numbers(global_var):
         # Initialization
         Nmin = Nj # sdf
         Nmax = 2*Nj # sdf
-        list_cultures = np.full((Ni,Nj),0)
-        list_per_cults = [[] for _ in range(size_max_reg)]
+        list_cultures = np.full((Ni,Nj),0) # solution in array
+        list_per_cults = [[] for _ in range(size_max_reg)] # solution in list ???
         impossibilities = np.zeros((Ni, Nj))
 
-        # Add crops (= cultures) on board in increasing order
+        # Add crops (= cultures) on board, in increasing order
         for crop in range(1, size_max_reg):
             N = randrange(Nmin, Nmax+1)
 
-            ind = 0
-            while ind < N:
+            for ind in range(N):
                 possib = [[i,j] for i,j in coords_all if not impossibilities[i,j]]
-                if possib:
+                if possib: # to use choice function
                     a,b = choice(possib)
                     list_cultures[a,b] = crop
                     list_per_cults[crop-1].append([a,b])
-                    impossibilities = fun_update_small(a,b, crop, impossibilities, coords_all)
-                    ind += 1
+                    impossibilities = fun_update_small(a,b, crop, impossibilities, coords_all) # [a,b] in its own neighborhood
                 else:
                     break
+
+            # If loop stopped, at least Nmin crops ?
             if ind < Nmin:
                 bol = False
                 break
