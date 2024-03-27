@@ -8,16 +8,6 @@ PROPRE
 - issues
 - readme
 
-- Nmax plus petit pour 1e fonction, pour crop 1 ?
-- s'assurer du board minimal, et avoir un avec au moins 5
-
-
-
-
-
-
-
-
 ===================================================================================================
 DEBUG
 
