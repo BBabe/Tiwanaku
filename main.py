@@ -1,17 +1,22 @@
 '''
-
+Start computations by filling boards with numbers (= cultures = crops),
+following the only rule of two same crops cannot be next to one another.
+Regions will be fitted into this filled board only after (with high probability).
+This appears to be way much faster than my original method, which consisted in
+iteratively filling the board with filled regions compatible with existing board
+(see important/old_all_solutions_functions.py)
 '''
 print('Loading modules...')
 import time
 import numpy as np
 import pandas as pd
 import os
+import json
 # import warnings
 # warnings.filterwarnings("ignore")
 
 # local modules
-from functions import put_numbers, put_regions, put_colors, rec_maxi, init_rec, init_board, interaction, fun_plot, fun_time, fun_permut
-print()
+from functions import put_numbers, put_regions, put_colors, rec_maxi, init_rec, init_board, interaction, fun_plot, fun_time, fun_permut, fun_neighbors_all
 ## Input parameters
 # 0 = plot whole solution; 1 = interact with user throughout the game
 bol_interaction = 0
@@ -48,15 +53,28 @@ colors_small = ['M', 'J', 'V', 'B']
 Ncols = len(colors)
 colors_set = set(range(1,Ncols+1))
 
-global_var = Ni, Nj, path_df, path_df0, path_tetris, NN, iz, jz, coords_all, size_max_reg, colors, colors_small, Ncols, colors_set
+# All possible region forms (some 5 regions are impossible in this game, when U or L form)
+with open(path_tetris, "r") as fp:
+    tetris_forms = json.load(fp)
+
+global_var = Ni, Nj, path_df, path_df0, NN, iz, jz, coords_all, size_max_reg, colors, colors_small, Ncols, colors_set
+
+##
+print('Small computations...')
+
+# All possible sequences of cultures, for all region sizes
+permuts = fun_permut(size_max_reg)
+# All tetris forms for each territory i,j and size
+regs_ij = fun_neighbors_all(global_var, tetris_forms)
 
 ##################################
 ##################################
 ##################################
-
+print()
 if bol_save:
     start = time.time()
     bol_impos = True
+    # Some boards filled with cultures allow no associated regions
     while bol_impos:
         ##################################
         print('Generation of cultures...')
@@ -70,7 +88,7 @@ if bol_save:
         ##################################
         print('Associated regions...')
 
-        compt, sorted_regs, board, bol_impos = put_regions(global_var, Ns, list_per_cults, list_cultures)
+        compt, sorted_regs, board, bol_impos = put_regions(global_var, Ns, list_per_cults, list_cultures, regs_ij)
 
         print('Number of tests =', compt)
         start = fun_time(start)
@@ -86,7 +104,6 @@ if bol_save:
     ##################################
     print('All solutions corresponding to these regions...')
 
-    permuts = fun_permut(size_max_reg)
     solution0, impossibilities0, list_solutions0, cult_region, list_regions, ind = init_rec(global_var, sorted_regs, board)
     list_solutions = rec_maxi(solution0, impossibilities0, list_solutions0, cult_region, list_regions, ind, permuts, coords_all)
 

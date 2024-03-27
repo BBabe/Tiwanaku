@@ -4,12 +4,19 @@ simu : https://www.codedna.me/posts/tiwanaku-scenarios.html
 PROPRE
 
 - choses à centraliser entre les différentes fonctions peut-être
-- commentaires
 - séquencer ac + de fonctions
 - issues
 - readme
 
-- Nmax plus petit pour 1e fonction
+- Nmax plus petit pour 1e fonction, pour crop 1 ?
+- s'assurer du board minimal, et avoir un avec au moins 5
+
+
+
+
+
+
+
 
 ===================================================================================================
 DEBUG

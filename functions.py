@@ -4,7 +4,6 @@
 import time
 from random import randrange, choice, shuffle
 import numpy as np
-import json
 import copy
 import pandas as pd
 from tabulate import tabulate
@@ -45,18 +44,35 @@ def fun_permut(size_max_reg):
     return permuts
 
 
-##
+def fun_neighbors_all(global_var, tetris_forms):
+    ''' All tetris forms for each territory i,j and size '''
+    Ni, Nj, path_df, path_df0, NN, iz, jz, coords_all, size_max_reg, colors, colors_small, Ncols, colors_set = global_var
+    regs_ij = [[[[] for size in range(size_max_reg)] for j in jz] for i in iz]
+    for i in iz:
+        for j in jz:
+            for size in range(size_max_reg):
+                regs_all_ij = [[[a+i,b+j] for a,b in reg] for reg in tetris_forms[size]]
+                for reg in regs_all_ij:
+                    for ter in reg:
+                        if ter not in coords_all:
+                            break
+                    else: # no break: region is inside board
+                        regs_ij[i][j][size].append(reg)
+    return regs_ij
+
+
+## Generation of cultures
 
 def put_numbers(global_var):
     '''
     Start computations by filling boards with numbers (= cultures = crops),
     following the only rule of two same crops cannot be next to one another.
-    Regions will be fitted into this filled board only after (with high probability).
-    This appears to be way much faster than my original method, which consisted in
-    iteratively filling the board with filled regions compatible with existing board
-    (see important/old_all_solutions_functions.py)
+    The board is filled with crops with increasing value.
+    Each value is put a random number of times, number between dependant bounds.
+    As soon as there is an impossibility, start over.
+    The largest crops are done in the end, as they should merely fill the remaining holes.
     '''
-    Ni, Nj, path_df, path_df0, path_tetris, NN, iz, jz, coords_all, size_max_reg, colors, colors_small, Ncols, colors_set = global_var
+    Ni, Nj, path_df, path_df0, NN, iz, jz, coords_all, size_max_reg, colors, colors_small, Ncols, colors_set = global_var
 
     Ns = np.full((size_max_reg,),0)
     # Information on number of tests
@@ -87,13 +103,13 @@ def put_numbers(global_var):
                     list_per_cults[crop-1].append([a,b])
                     impossibilities = fun_update_small(a,b, crop, impossibilities, coords_all) # [a,b] in its own neighborhood
                 else:
-                    break
+                    break # leave loop over ind
 
             # If loop stopped, at least Nmin crops ?
             nb_cult = len(list_per_cults[crop-1])
             if nb_cult < Nmin:
                 bol = False
-                break
+                break # leave loop over crop
 
             Ns[crop-1] = nb_cult
             Nmax = nb_cult # For next crop, there must be at most as much as this one
@@ -102,7 +118,7 @@ def put_numbers(global_var):
 
             if Nmin > Nmax:
                 bol = False
-                break
+                break # leave loop over crop
 
             # Already filles territories won't be a second time
             impossibilities = 1.*list_cultures
@@ -117,7 +133,7 @@ def put_numbers(global_var):
                     # Test not for first iteration, when impossibilities = list_cultures
                     if impossibilities[a,b]:
                         bol = False
-                        break
+                        break # leave loop over a,b
 
                     list_cultures[a,b] = crop
                     list_per_cults[crop-1].append([a,b])
@@ -128,18 +144,18 @@ def put_numbers(global_var):
     return compteur, Ns, list_cultures, list_per_cults, impossibilities
 
 
-##
+## Associated regions
 
 
-def put_regions(global_var, Ns, list_per_cults, list_cultures):
+def put_regions(global_var, Ns, list_per_cults, list_cultures, regs_ij):
     '''
-
+    Fitting regions into the board already filled with cultures.
+    Regions are put by decreasing size, each starting on any crop corresponding to its size.
+    As soon as there is an impossibility, start over.
+    Except if it is shown that a territory is part of no valid region, considering the current crops.
+    In this case, start over to put_numbers function.
     '''
-    Ni, Nj, path_df, path_df0, path_tetris, NN, iz, jz, coords_all, size_max_reg, colors, colors_small, Ncols, colors_set = global_var
-
-    # All possible region forms (some 5 regions are impossible in this game, when U or L form)
-    with open(path_tetris, "r") as fp:
-        tetris_forms = json.load(fp)
+    Ni, Nj, path_df, path_df0, NN, iz, jz, coords_all, size_max_reg, colors, colors_small, Ncols, colors_set = global_var
 
     Ns[-1] = NN - sum(Ns[:-1])
     # Number of regions of each size
@@ -152,9 +168,7 @@ def put_regions(global_var, Ns, list_per_cults, list_cultures):
     Nsizes_list.reverse()
 
     compt = 0
-    bol_filled = False
-    bol_impos = False
-    while (not bol_filled) and (not bol_impos):
+    while 1:
         compt += 1
         poss = np.ones((Ni,Nj))
         list_regs = []
@@ -166,112 +180,131 @@ def put_regions(global_var, Ns, list_per_cults, list_cultures):
             seti = set(range(1,size+1))
 
             # Find a region of size size, containing i,j, in the remaining available board
-            all_regs = [[[a+i,b+j] for a,b in reg] for reg in tetris_forms[size-1]] # pre-compute tetris_forms for each i,j, to get rid of coords_all's test ?
+            all_regs = regs_ij[i][j][size-1]
             shuffle(all_regs)
+            bol_impos = True
+            bol_reg = False
             for reg in all_regs:
+
+                if set([list_cultures[a,b] for a,b in reg]) == seti:
+                    # There exists a region fitting the board and its cultures
+                    bol_impos = False
+
+                    for a,b in reg:
+                        if not poss[a,b]:
+                            break # leave loop over reg
+                    else: # no break: valid region
+                        bol_reg = True
+                        break # leave loop over all_regs
+
+            # Impossibility to solve board with these cultures
+            if bol_impos:
+                # Leave function and go back to generating new cultures
+                return compt, 0, 0, bol_impos
+
+            if bol_reg:
+            # Updating variables with new valid region
+                list_regs.append(reg)
                 for a,b in reg:
-                    if ([a,b] not in coords_all) or (not poss[a,b]):
-                        break
-                else: # break
-                    if set([list_cultures[a,b] for a,b in reg]) == seti:
-                        break
-            else:     # break
-                bol_impos = True
-                break
-
-            list_regs.append(reg)
-            for a,b in reg:
-                poss[a,b] = 0
-                list_per_cults_copy[list_cultures[a,b]-1].remove([a,b])
-
-            for a,b in coords_all:
-                if poss[a,b]:
-                    break
+                    poss[a,b] = 0
+                    list_per_cults_copy[list_cultures[a,b]-1].remove([a,b])
             else:
-                bol_filled = True
+            # Start over filling the board
+                break # leave loop over Nsizes_list
 
-    sorted_regs = sorted(list_regs, key = len)
+
+        else: # no break: board filled with regions
+            break # leave while loop
+
+    # Formatting solutions
+    list_regs.reverse()
+    # list_regs = sorted(list_regs, key = len)
 
     board = np.full((Ni,Nj),0)
-    for ind, reg in enumerate(sorted_regs):
+    for ind, reg in enumerate(list_regs):
         for i,j in reg:
             board[i,j] = ind+1
 
-    return compt, sorted_regs, board, bol_impos
+    return compt, list_regs, board, False
 
 
-##
+## Possible colors set
 
 
 def put_colors(global_var, sorted_regs, board):
-    Ni, Nj, path_df, path_df0, path_tetris, NN, iz, jz, coords_all, size_max_reg, colors, colors_small, Ncols, colors_set = global_var
-    Nreg = len(sorted_regs)
+    '''
+    Associate each region with a color, following the rule that
+    two adjacent regions cannot have the same color.
+    Regions with the fewest possible colors are colored first.
+    As soon as there is an impossibility, start over,
+    although so far the solution has always been found during the first try.
+    '''
+    Ni, Nj, path_df, path_df0, NN, iz, jz, coords_all, size_max_reg, colors, colors_small, Ncols, colors_set = global_var
 
     bol_no = True
     compt = 0
     while bol_no:
         compt += 1
 
-        impossibilities = [set() for _ in range(Nreg)]
+        impossibilities = [set() for _ in range(len(sorted_regs))]
         arr_cols = np.full((Ni,Nj),0)
+        # Variable checking if the Ncols colors are used at least once
         cols_used = set()
-        for _ in sorted_regs:
+        for _ in sorted_regs: # number of iterations must be the number of regions
 
+            # Select region the most constrained in color
             maxi = 0
             ind_worst_reg = 0
             mini_bol = False
             for ind, nocols in enumerate(impossibilities):
                 leni = len(nocols)
+
                 if leni == Ncols:
+                    # No possible color for one region
                     mini_bol = True
-                    break
+                    break # exit loop over nocols
+
                 elif leni > maxi:
                     maxi = leni
                     ind_worst_reg = ind
 
-            else:
+            else: # no break:
                 reg = sorted_regs[ind_worst_reg]
+                coords_others = [ter for ter in coords_all if ter not in reg]
                 cols = list(colors_set - impossibilities[ind_worst_reg])
-                col = choice(cols)
+                col = choice(cols) # a random color is chosen
                 cols_used.add(col)
-                impossibilities[ind_worst_reg] = set()
+                impossibilities[ind_worst_reg] = set() # so that this region is not chosen again
 
-                neighs = []
-                coords_others = [ter for ter in coords_all if (ter not in reg) and (ter not in neighs)]
                 for i,j in reg:
+                    # Fill solution array with colors
                     arr_cols[i,j] = col
-
+                    # Update impossible colors in adjacent regions
                     for neigh in [[i+x, j+y] for x in [-1,0,1] for y in [-1,0,1]]:
-                        if neigh in coords_others and not arr_cols[neigh[0], neigh[1]]:
+                        if neigh in coords_others and not arr_cols[neigh[0], neigh[1]]: # ensure regions already filled are not considered anymore
                             impossibilities[board[neigh[0], neigh[1]]-1].add(col)
-                            neighs.append(neigh)
+
             if mini_bol:
-                break
-        else:
-            if len(cols_used) == Ncols:
-                bol_no = False
+                break # exit loop over sorted_regs
+
+        else: # no break:
+            bol_no = len(cols_used) != Ncols
 
     return arr_cols
 
-##
+## All solutions corresponding to these regions
 
 
 def init_rec(global_var, sorted_regs, board):
-    Ni, Nj, path_df, path_df0, path_tetris, NN, iz, jz, coords_all, size_max_reg, colors, colors_small, Ncols, colors_set = global_var
-    # cultures_types = [[i+1 for i in range(size)] for size in range(1,size_max_reg+1)]
+    ''' Initialize variables for the recursive function '''
+    Ni, Nj, path_df, path_df0, NN, iz, jz, coords_all, size_max_reg, colors, colors_small, Ncols, colors_set = global_var
     solution0 = []
     list_solutions0 = []
     cult_region = []
     list_regions = sorted_regs
     ind = 0
 
-    # neighbors_all = [[[] for j in jz] for i in iz]
-    # for i in iz:
-    #     for j in jz:
-    #         reg = sorted_regs[board[i,j]-1]
-    #         coords = [ter for ter in coords_all if ter not in reg]
-    #         neighbors_all[i][j] = [[a,b] for a in [i-1,i,i+1] for b in [j-1,j,j+1] if [a,b] in coords]
-
+    # Crops larger than the size of a region are considered in the impossibilites
     impossibilities0 = [[set() for j in jz] for i in iz]
     for i in iz:
         for j in jz:
@@ -282,69 +315,97 @@ def init_rec(global_var, sorted_regs, board):
 
 
 def rec_maxi(solution0, impossibilities0, list_solutions0, cult_region, list_regions, ind, permuts, coords_all):
+    '''
+    Find all solutions corresponding to the regions found by function put_regions.
+    Each call of this recursive function fills a region with crops, starting with the largest regions.
+
+    Recursion functions work as follows:
+    - make a copy of lists to be updated
+    - update lists
+    - condition of end of recursion
+    - recursion: loops on diverging possibilities
+    '''
+    # Copying...
     solution = solution0.copy()
     impossibilities = copy.deepcopy(impossibilities0)
     list_solutions = list_solutions0.copy()
 
+    # If a region was passed on (always, except for first call), add it to the current solution
     if cult_region:
         solution.append(cult_region)
 
+    # When current solution is complete, add it to the list
     if len(solution) == len(list_regions):
         list_solutions.append(solution)
 
     else:
 
+        # If new region is added, update the impossibilities
+        # The impossibilities of the given region are also updated for the fill_impos function
         if cult_region:
             region = list_regions[ind-1]
             coords = [ter for ter in coords_all if ter not in region]
             for ind_reg, cult in enumerate(cult_region):
                 i,j = region[ind_reg]
                 neighbors = [[a,b] for a in [i-1,i,i+1] for b in [j-1,j,j+1] if [a,b] in coords]
-                for a,b in neighbors+region:
-                    if cult not in impossibilities[a][b] and [a,b]!=[i,j]:
+                for a,b in neighbors+region: # some region members may not be adjacent
+                    if [a,b]!=[i,j]:
                         impossibilities[a][b].add(cult)
 
-        ''' acceleration by logic solving at each step '''
+        ''' In progress (see important/faster_solve scripts): acceleration by logic solving at each step. Can be uncommented. '''
         # _, impossibilities = fill_impos(impossibilities, sorted_regs, board)
 
         region = list_regions[ind]
-
+        # For all permutationso of cultures of the right size...
         for cult_region in permuts[len(region)-1]:
+
+            # Check if this combination of cultures is possible
             for ind_cult, cult in enumerate(cult_region):
                 a,b = region[ind_cult]
                 if cult in impossibilities[a][b]:
                     break # terminate computations from the first impossibility
-            else: # if no break
+            else: # no break: this combination is possible
+                # Recursive call, by incrementing the region index
                 list_solutions = rec_maxi(solution, impossibilities, list_solutions, cult_region, list_regions, ind+1, permuts, coords_all)
 
     return list_solutions
 
 
-##
+## Initialize board with unique solution
+
 
 def init_board(global_var, sorted_regs, list_solutions, Nsol, list_cultures, arr_cols):
-    Ni, Nj, path_df, path_df0, path_tetris, NN, iz, jz, coords_all, size_max_reg, colors, colors_small, Ncols, colors_set = global_var
+    '''
+    Find a set of territories which, when their crop is revealed, leads to
+    the initial solution, found by the put_numbers function.
+    This is done by finding the territories where there are few solutions having
+    the same crop than the initial one.
+    '''
+    Ni, Nj, path_df, path_df0, NN, iz, jz, coords_all, size_max_reg, colors, colors_small, Ncols, colors_set = global_var
+    # Convert format of list of solutions
     array_solutions = np.full((Nsol, Ni, Nj), 0)
     for ind_sol in range(Nsol):
         for ind_reg, reg in enumerate(sorted_regs):
             for ind_ter, ter in enumerate(reg):
                 array_solutions[ind_sol, ter[0], ter[1]] = list_solutions[ind_sol][ind_reg][ind_ter]
 
+    # Find necessary information leading to the crops first found by put_numbers function
     bol0 = True
-    inds = set(range(Nsol))
-    unique = np.full((Ni,Nj), 0)
+    inds = set(range(Nsol)) # Solutions which can still be obtained by minimal board
+    unique = np.full((Ni,Nj), 0) # Minimal board leading to solution
     while bol0:
-
+        # For each territory, number of solutions having the same crop as the initial solution
         nbs = np.full((Ni,Nj), 0)
         for ind_sol in inds:
             nbs += (array_solutions[ind_sol,:,:] == list_cultures)
-
+        # Consider the territory corresponding to the fewest solutions
         i,j = np.unravel_index(np.argmin(nbs), nbs.shape)
         unique[i,j] = list_cultures[i,j]
-
+        # Updates remaining solutions
         inds = set([ind for ind in inds if array_solutions[ind,i,j]==list_cultures[i,j]])
         bol0 = (len(inds) > 1)
 
+    # Data to print when bol_interaction (df0 = whole solution, df = solution in progress)
     df0 = pd.DataFrame(list_cultures)
     df = df0.copy()
     for i in iz:
@@ -362,8 +423,9 @@ def init_board(global_var, sorted_regs, list_solutions, Nsol, list_cultures, arr
 
 ##
 
+
 def interaction(global_var, df0, df):
-    Ni, Nj, path_df, path_df0, path_tetris, NN, iz, jz, coords_all, size_max_reg, colors, colors_small, Ncols, colors_set = global_var
+    Ni, Nj, path_df, path_df0, NN, iz, jz, coords_all, size_max_reg, colors, colors_small, Ncols, colors_set = global_var
     Ntuiles = np.full((Ncols,), 0)
     for i in iz:
         for j in jz:
@@ -402,7 +464,7 @@ def interaction(global_var, df0, df):
 
 
 def fun_plot(global_var, list_solutions, Nsol, arr_cols, sorted_regs):
-    Ni, Nj, path_df, path_df0, path_tetris, NN, iz, jz, coords_all, size_max_reg, colors, colors_small, Ncols, colors_set = global_var
+    Ni, Nj, path_df, path_df0, NN, iz, jz, coords_all, size_max_reg, colors, colors_small, Ncols, colors_set = global_var
     ft = 40
     ind = int(input('Which solution to plot, between 0 and {}? '.format(Nsol-1)))
     sol_list = list_solutions[ind]
@@ -433,6 +495,7 @@ def fun_plot(global_var, list_solutions, Nsol, arr_cols, sorted_regs):
             text = ax.text(j, i, sol_array[i,j],ha="center", va="center", color="k", fontsize=ft)
 
     plt.show()
+
 
 ##
 
