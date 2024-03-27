@@ -3,13 +3,13 @@ simu : https://www.codedna.me/posts/tiwanaku-scenarios.html
 ===================================================================================================
 PROPRE
 
-- un seul global_var, pour que ce soit vraiment utile
 - choses à centraliser entre les différentes fonctions peut-être
 - commentaires
-- réduire import
-- séquencer en plus de fonctions
+- séquencer ac + de fonctions
 - issues
 - readme
+
+- Nmax plus petit pour 1e fonction
 
 ===================================================================================================
 DEBUG

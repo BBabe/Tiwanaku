@@ -55,24 +55,26 @@ global_var = Ni, Nj, path_df, path_df0, path_tetris, NN, iz, jz, coords_all, siz
 ##################################
 
 if bol_save:
-    ##################################
-    print('Generation of cultures...')
     start = time.time()
+    bol_impos = True
+    while bol_impos:
+        ##################################
+        print('Generation of cultures...')
 
-    compteur, Ns, list_cultures, list_per_cults, impossibilities = put_numbers(global_var)
+        compteur, Ns, list_cultures, list_per_cults, impossibilities = put_numbers(global_var)
 
-    print('Number of tests =', compteur)
-    start = fun_time(start)
-    print()
+        print('Number of tests =', compteur)
+        start = fun_time(start)
+        print()
 
-    ##################################
-    print('Associated regions...')
+        ##################################
+        print('Associated regions...')
 
-    compt, sorted_regs, board = put_regions(global_var, Ns, list_per_cults, list_cultures)
+        compt, sorted_regs, board, bol_impos = put_regions(global_var, Ns, list_per_cults, list_cultures)
 
-    print('Number of tests =', compt)
-    start = fun_time(start)
-    print()
+        print('Number of tests =', compt)
+        start = fun_time(start)
+        print()
 
     ##################################
     print('Possible colors set...')

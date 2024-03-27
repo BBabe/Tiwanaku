@@ -49,7 +49,12 @@ def fun_permut(size_max_reg):
 
 def put_numbers(global_var):
     '''
-
+    Start computations by filling boards with numbers (= cultures = crops),
+    following the only rule of two same crops cannot be next to one another.
+    Regions will be fitted into this filled board only after (with high probability).
+    This appears to be way much faster than my original method, which consisted in
+    iteratively filling the board with filled regions compatible with existing board
+    (see important/old_all_solutions_functions.py)
     '''
     Ni, Nj, path_df, path_df0, path_tetris, NN, iz, jz, coords_all, size_max_reg, colors, colors_small, Ncols, colors_set = global_var
 
@@ -60,16 +65,17 @@ def put_numbers(global_var):
     # Loop until solution found
     while not bol:
         compteur += 1
+        # bol is set as False as soon as the current board filling fails
         bol = True
 
         # Initialization
-        Nmin = Nj # sdf
-        Nmax = 2*Nj # sdf
+        Nmin = Nj # Maximum number of regions of size size_max_reg
+        Nmax = 2*Nj # Arbitrary number, in practice is always less --> optimization ?
         list_cultures = np.full((Ni,Nj),0) # solution in array
         list_per_cults = [[] for _ in range(size_max_reg)] # solution in list ???
         impossibilities = np.zeros((Ni, Nj))
 
-        # Add crops (= cultures) on board, in increasing order
+        # Add crops (= cultures) on board, in increasing order, up to size_max_reg-1 !
         for crop in range(1, size_max_reg):
             N = randrange(Nmin, Nmax+1)
 
@@ -84,35 +90,40 @@ def put_numbers(global_var):
                     break
 
             # If loop stopped, at least Nmin crops ?
-            if ind < Nmin:
+            nb_cult = len(list_per_cults[crop-1])
+            if nb_cult < Nmin:
                 bol = False
                 break
 
-            Ns[crop-1] = ind
-            Nmax = ind
+            Ns[crop-1] = nb_cult
+            Nmax = nb_cult # For next crop, there must be at most as much as this one
             Nsofar = sum(Ns)
-            Nmin = int((NN - Nsofar)/size_max_reg) + 1
+            Nmin = int((NN - Nsofar)/size_max_reg) + 1 # so that the biggest 5 regions can fill the board
 
             if Nmin > Nmax:
                 bol = False
                 break
 
+            # Already filles territories won't be a second time
             impossibilities = 1.*list_cultures
 
-        #
-
+        # Add crops of value size_max_reg
         if bol:
             remainings = [[i,j] for i,j in coords_all if not list_cultures[i,j]]
+            # In order to have at most as much of these crops as the size_max_reg-1 crops
             if len(remainings) <= Ns[-2]:
                 crop = size_max_reg
                 for a,b in remainings:
+                    # Test not for first iteration, when impossibilities = list_cultures
                     if impossibilities[a,b]:
                         bol = False
                         break
+
                     list_cultures[a,b] = crop
                     list_per_cults[crop-1].append([a,b])
                     impossibilities = fun_update_small(a,b, crop, impossibilities, coords_all)
-            else: # break
+
+            else:
                 bol = False
     return compteur, Ns, list_cultures, list_per_cults, impossibilities
 
@@ -121,45 +132,51 @@ def put_numbers(global_var):
 
 
 def put_regions(global_var, Ns, list_per_cults, list_cultures):
+    '''
+
+    '''
     Ni, Nj, path_df, path_df0, path_tetris, NN, iz, jz, coords_all, size_max_reg, colors, colors_small, Ncols, colors_set = global_var
 
-    # All possible region forms
+    # All possible region forms (some 5 regions are impossible in this game, when U or L form)
     with open(path_tetris, "r") as fp:
         tetris_forms = json.load(fp)
 
     Ns[-1] = NN - sum(Ns[:-1])
+    # Number of regions of each size
     Nsizes = [Ns[i]-Ns[i+1] for i in range(len(Ns)-1)] + [Ns[-1]]
-
+    # Repeat n times each number n
     Nsizes_list = []
     for ind, Nsize in enumerate(Nsizes):
         Nsizes_list.extend(Nsize*[ind+1])
+    # After some tests, starting with biggest regions invalidates current solution sooner
     Nsizes_list.reverse()
 
     compt = 0
-    bol_filled = True
-    while bol_filled:
+    bol_filled = False
+    bol_impos = False
+    while (not bol_filled) and (not bol_impos):
         compt += 1
         poss = np.ones((Ni,Nj))
         list_regs = []
 
-        bol_filled = True
-        ind_reg = 1
         list_per_cults_copy = copy.deepcopy(list_per_cults)
         for size in Nsizes_list:
-
+            # Choose a territory with the current region's maximal crop
             i,j = choice(list_per_cults_copy[size-1])
             seti = set(range(1,size+1))
 
-            all_regs = [[[a+i,b+j] for a,b in reg] for reg in tetris_forms[size-1]]
+            # Find a region of size size, containing i,j, in the remaining available board
+            all_regs = [[[a+i,b+j] for a,b in reg] for reg in tetris_forms[size-1]] # pre-compute tetris_forms for each i,j, to get rid of coords_all's test ?
             shuffle(all_regs)
             for reg in all_regs:
                 for a,b in reg:
                     if ([a,b] not in coords_all) or (not poss[a,b]):
                         break
-                else:
+                else: # break
                     if set([list_cultures[a,b] for a,b in reg]) == seti:
                         break
-            else:
+            else:     # break
+                bol_impos = True
                 break
 
             list_regs.append(reg)
@@ -169,10 +186,9 @@ def put_regions(global_var, Ns, list_per_cults, list_cultures):
 
             for a,b in coords_all:
                 if poss[a,b]:
-                    ind_reg += 1
                     break
             else:
-                bol_filled = False
+                bol_filled = True
 
     sorted_regs = sorted(list_regs, key = len)
 
@@ -181,7 +197,7 @@ def put_regions(global_var, Ns, list_per_cults, list_cultures):
         for i,j in reg:
             board[i,j] = ind+1
 
-    return compt, sorted_regs, board
+    return compt, sorted_regs, board, bol_impos
 
 
 ##
